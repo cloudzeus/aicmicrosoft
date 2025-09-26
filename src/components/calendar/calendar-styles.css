@@ -1,0 +1,250 @@
+/* React Big Calendar Custom Styles - Shadcn Theme Integration */
+
+.rbc-calendar {
+  font-family: inherit;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+}
+
+/* Header Styles */
+.rbc-header {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  border-bottom: 1px solid hsl(var(--border));
+  font-weight: 600;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.rbc-toolbar {
+  background: hsl(var(--card));
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 1rem;
+  margin: 0;
+}
+
+.rbc-toolbar button {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  background: hsl(var(--secondary) / 0.8);
+  border-color: hsl(var(--border) / 0.8);
+}
+
+.rbc-toolbar button:active,
+.rbc-toolbar button.rbc-active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+
+.rbc-toolbar-label {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+/* Month View */
+.rbc-month-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.rbc-month-row {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-date-cell {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  padding: 0.5rem;
+}
+
+.rbc-off-range-bg {
+  background: hsl(var(--muted) / 0.3);
+}
+
+.rbc-today {
+  background: hsl(var(--accent) / 0.5);
+}
+
+/* Week View */
+.rbc-time-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.rbc-time-header {
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-time-header-content {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-time-slot {
+  border-bottom: 1px solid hsl(var(--border) / 0.3);
+}
+
+.rbc-time-content {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid hsl(var(--border) / 0.3);
+}
+
+/* Events */
+.rbc-event {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.125rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: all 0.2s;
+}
+
+.rbc-event:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  transform: translateY(-1px);
+}
+
+.rbc-event.rbc-selected {
+  background: hsl(var(--primary) / 0.8);
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.5);
+}
+
+/* Event Content */
+.rbc-event-content {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Agenda View */
+.rbc-agenda-view {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.rbc-agenda-view table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.rbc-agenda-view table tbody > tr > td {
+  padding: 0.75rem;
+  border-bottom: 1px solid hsl(var(--border));
+  vertical-align: top;
+}
+
+.rbc-agenda-date-cell,
+.rbc-agenda-time-cell {
+  background: hsl(var(--muted) / 0.5);
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+  width: 120px;
+}
+
+.rbc-agenda-event-cell {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Popup */
+.rbc-overlay {
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  padding: 0.5rem;
+  z-index: 1000;
+}
+
+.rbc-overlay-header {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin-bottom: 0.25rem;
+}
+
+/* Time Grid */
+.rbc-time-view .rbc-header {
+  border-bottom: 1px solid hsl(var(--border));
+  border-right: 1px solid hsl(var(--border));
+}
+
+.rbc-time-view .rbc-events-container {
+  margin-right: 0;
+}
+
+/* Current Time Indicator */
+.rbc-current-time-indicator {
+  background: hsl(var(--destructive));
+  height: 2px;
+  z-index: 10;
+}
+
+/* Selected Slot */
+.rbc-selected {
+  background: hsl(var(--accent) / 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .rbc-toolbar-label {
+    font-size: 1rem;
+  }
+  
+  .rbc-header {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .rbc-event {
+    font-size: 0.625rem;
+    padding: 0.0625rem 0.125rem;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .rbc-calendar {
+    background: hsl(var(--background));
+  }
+  
+  .rbc-header {
+    background: hsl(var(--muted));
+  }
+  
+  .rbc-toolbar {
+    background: hsl(var(--card));
+  }
+}
+
+
+
