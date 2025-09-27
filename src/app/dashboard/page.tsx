@@ -250,6 +250,12 @@ export default async function DashboardPage() {
                     SharePoint
                   </a>
                 </Button>
+                <Button asChild variant="outline" className="h-20 flex-col gap-2 hover:bg-[#eef2ff]">
+                  <a href="/users">
+                    <FaUsers className="w-6 h-6" />
+                    Tenant Users
+                  </a>
+                </Button>
                 <Button variant="outline" className="h-20 flex-col gap-2 hover:bg-[#eef2ff]">
                   <FaGlobe className="w-6 h-6" />
                   Office 365 Apps

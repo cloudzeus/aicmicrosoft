@@ -215,3 +215,4 @@ export function ReactBigCalendar({ events, onSelectEvent, onSelectSlot, loading 
 
 
 
+
