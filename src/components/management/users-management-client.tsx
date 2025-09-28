@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Users, Plus, UserCheck, Loader2, Building, Mail, Briefcase } from "lucide-react"
 import { UsersTreeTable } from "@/components/management/users-tree-table"
+import { UserEditModal } from "@/components/management/user-edit-modal"
+import { UserAssignmentsModal } from "@/components/management/user-assignments-modal"
 import { toast } from "sonner"
 
 interface User {
@@ -54,17 +56,30 @@ interface Department {
   description?: string | null
 }
 
+interface Position {
+  id: string
+  name: string
+  department: {
+    id: string
+    name: string
+    code: string
+  }
+}
+
 interface UsersManagementClientProps {
   initialUsers: User[]
   initialDepartments: Department[]
+  initialPositions?: Position[]
 }
 
 export function UsersManagementClient({ 
   initialUsers, 
-  initialDepartments 
+  initialDepartments,
+  initialPositions = []
 }: UsersManagementClientProps) {
   const [users, setUsers] = useState<User[]>(initialUsers)
   const [departments, setDepartments] = useState<Department[]>(initialDepartments)
+  const [positions, setPositions] = useState<Position[]>(initialPositions)
   const [stats, setStats] = useState({
     totalUsers: 0,
     assignedUsers: 0,
@@ -76,6 +91,10 @@ export function UsersManagementClient({
     localUsers: 0
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [assignmentType, setAssignmentType] = useState<'departments' | 'positions'>('departments')
 
   const fetchData = async () => {
     try {
@@ -110,6 +129,12 @@ export function UsersManagementClient({
       if (!departmentsResponse.ok) throw new Error('Failed to fetch departments')
       const departmentsData = await departmentsResponse.json()
       setDepartments(departmentsData.departments || [])
+
+      // Fetch positions
+      const positionsResponse = await fetch('/api/positions')
+      if (!positionsResponse.ok) throw new Error('Failed to fetch positions')
+      const positionsData = await positionsResponse.json()
+      setPositions(positionsData.positions || [])
 
       // Calculate comprehensive stats
       const usersList = usersData.users || []
@@ -190,23 +215,28 @@ export function UsersManagementClient({
   }, [initialUsers, initialDepartments])
 
   const handleEditUser = (user: User) => {
-    console.log('Edit user:', user)
-    toast.info('Edit user functionality coming soon')
+    setSelectedUser(user)
+    setShowEditModal(true)
   }
 
   const handleDeleteUser = (user: User) => {
-    console.log('Delete user:', user)
-    toast.info('Delete user functionality coming soon')
+    if (confirm(`Are you sure you want to delete user "${user.name || user.email}"? This action cannot be undone.`)) {
+      // This will be handled by the UserEditModal
+      setSelectedUser(user)
+      setShowEditModal(true)
+    }
   }
 
   const handleAssignDepartments = (user: User) => {
-    console.log('Assign departments to user:', user)
-    toast.info('Assign departments functionality coming soon')
+    setSelectedUser(user)
+    setAssignmentType('departments')
+    setShowAssignmentModal(true)
   }
 
   const handleAssignPositions = (user: User) => {
-    console.log('Assign positions to user:', user)
-    toast.info('Assign positions functionality coming soon')
+    setSelectedUser(user)
+    setAssignmentType('positions')
+    setShowAssignmentModal(true)
   }
 
   const handleDataChange = () => {
@@ -289,6 +319,63 @@ export function UsersManagementClient({
         onAssignPositions={handleAssignPositions}
         onDataChange={handleDataChange}
       />
+
+      {/* User Edit Modal */}
+      <UserEditModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false)
+          setSelectedUser(null)
+        }}
+        user={selectedUser}
+        onSuccess={() => {
+          setShowEditModal(false)
+          setSelectedUser(null)
+          handleDataChange()
+        }}
+      />
+
+      {/* User Assignment Modal */}
+      {selectedUser && (
+        <UserAssignmentsModal
+          isOpen={showAssignmentModal}
+          onClose={() => {
+            setShowAssignmentModal(false)
+            setSelectedUser(null)
+          }}
+          user={selectedUser}
+          type={assignmentType}
+          departments={departments}
+          positions={positions}
+          assignedItems={assignmentType === 'positions' ? 
+            (selectedUser.userPositions || []).map(up => ({
+              id: up.id,
+              assignedAt: up.assignedAt,
+              user: {
+                id: selectedUser.id,
+                name: selectedUser.name,
+                email: selectedUser.email,
+                role: 'USER'
+              }
+            })) : 
+            (selectedUser.userDepartments || []).map(ud => ({
+              id: ud.id,
+              assignedAt: ud.assignedAt,
+              user: {
+                id: selectedUser.id,
+                name: selectedUser.name,
+                email: selectedUser.email,
+                role: 'USER'
+              }
+            }))
+          }
+          onSuccess={() => {
+            setShowAssignmentModal(false)
+            setSelectedUser(null)
+            handleDataChange()
+          }}
+        />
+      )}
     </div>
   )
 }

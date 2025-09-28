@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Building, Plus, Users, Loader2, Briefcase, Share } from "lucide-react"
 import { DepartmentsTreeTable } from "@/components/management/departments-tree-table"
+import { DepartmentModal } from "@/components/management/department-modal"
+import { DepartmentResourcesModal } from "@/components/management/department-resources-modal"
 import { toast } from "sonner"
 
 interface Department {
@@ -91,6 +93,12 @@ export function DepartmentsManagementClient({
     localDepartments: 0
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [showDepartmentModal, setShowDepartmentModal] = useState(false)
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null)
+  const [positions, setPositions] = useState<any[]>([])
+  const [showResourcesModal, setShowResourcesModal] = useState(false)
+  const [resourceType, setResourceType] = useState<'sharepoint' | 'mailbox' | 'group'>('sharepoint')
+  const [departmentResources, setDepartmentResources] = useState<any[]>([])
 
   const fetchData = async () => {
     try {
@@ -121,6 +129,12 @@ export function DepartmentsManagementClient({
       if (!usersResponse.ok) throw new Error('Failed to fetch users')
       const usersData = await usersResponse.json()
       setUsers(usersData.users || [])
+
+      // Fetch positions
+      const positionsResponse = await fetch('/api/positions')
+      if (!positionsResponse.ok) throw new Error('Failed to fetch positions')
+      const positionsData = await positionsResponse.json()
+      setPositions(positionsData.positions || [])
 
       // Calculate comprehensive stats
       const departmentsList = departmentsData.departments || []
@@ -211,9 +225,14 @@ export function DepartmentsManagementClient({
     })
   }, [initialDepartments, initialUsers])
 
+  const handleCreateDepartment = () => {
+    setSelectedDepartment(null)
+    setShowDepartmentModal(true)
+  }
+
   const handleEditDepartment = (department: Department) => {
-    console.log('Edit department:', department)
-    toast.info('Edit department functionality coming soon')
+    setSelectedDepartment(department)
+    setShowDepartmentModal(true)
   }
 
   const handleDeleteDepartment = (department: Department) => {
@@ -226,9 +245,67 @@ export function DepartmentsManagementClient({
     toast.info('Assign users functionality coming soon')
   }
 
-  const handleManageSharePoints = (department: Department) => {
-    console.log('Manage SharePoint for department:', department)
-    toast.info('Manage SharePoint functionality coming soon')
+  const handleManageSharePoints = async (department: Department) => {
+    try {
+      setSelectedDepartment(department)
+      setResourceType('sharepoint')
+      
+      // Fetch current SharePoint sites for this department
+      const response = await fetch(`/api/departments/${department.id}/sharepoints`)
+      if (response.ok) {
+        const data = await response.json()
+        setDepartmentResources(data.sharePoints || [])
+      } else {
+        setDepartmentResources([])
+      }
+      
+      setShowResourcesModal(true)
+    } catch (error) {
+      console.error('Error fetching SharePoint sites:', error)
+      toast.error('Failed to load SharePoint sites')
+    }
+  }
+
+  const handleManageMailboxes = async (department: Department) => {
+    try {
+      setSelectedDepartment(department)
+      setResourceType('mailbox')
+      
+      // Fetch current mailboxes for this department
+      const response = await fetch(`/api/departments/${department.id}/mailboxes`)
+      if (response.ok) {
+        const data = await response.json()
+        setDepartmentResources(data.mailboxes || [])
+      } else {
+        setDepartmentResources([])
+      }
+      
+      setShowResourcesModal(true)
+    } catch (error) {
+      console.error('Error fetching mailboxes:', error)
+      toast.error('Failed to load mailboxes')
+    }
+  }
+
+  const handleManageGroups = async (department: Department) => {
+    try {
+      setSelectedDepartment(department)
+      setResourceType('group')
+      
+      // Fetch current groups for this department
+      const response = await fetch(`/api/departments/${department.id}/groups`)
+      if (response.ok) {
+        const data = await response.json()
+        setDepartmentResources(data.groups || [])
+      } else {
+        setDepartmentResources([])
+      }
+      
+      setShowResourcesModal(true)
+    } catch (error) {
+      console.error('Error fetching groups:', error)
+      toast.error('Failed to load groups')
+    }
   }
 
   const handleDataChange = () => {
@@ -309,8 +386,51 @@ export function DepartmentsManagementClient({
         onDeleteDepartment={handleDeleteDepartment}
         onAssignUsers={handleAssignUsers}
         onManageSharePoints={handleManageSharePoints}
+        onManageMailboxes={handleManageMailboxes}
+        onManageGroups={handleManageGroups}
+        onCreateDepartment={handleCreateDepartment}
         onDataChange={handleDataChange}
       />
+
+      {/* Department Modal */}
+      <DepartmentModal
+        isOpen={showDepartmentModal}
+        onClose={() => {
+          setShowDepartmentModal(false)
+          setSelectedDepartment(null)
+        }}
+        department={selectedDepartment}
+        departments={departments}
+        users={users}
+        positions={positions}
+        onSuccess={() => {
+          setShowDepartmentModal(false)
+          setSelectedDepartment(null)
+          handleDataChange()
+        }}
+      />
+
+      {/* Resources Modal */}
+      {selectedDepartment && (
+        <DepartmentResourcesModal
+          isOpen={showResourcesModal}
+          onClose={() => {
+            setShowResourcesModal(false)
+            setSelectedDepartment(null)
+            setDepartmentResources([])
+          }}
+          departmentId={selectedDepartment.id}
+          departmentName={selectedDepartment.name}
+          resourceType={resourceType}
+          resources={departmentResources}
+          onSuccess={() => {
+            setShowResourcesModal(false)
+            setSelectedDepartment(null)
+            setDepartmentResources([])
+            handleDataChange()
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -3,8 +3,8 @@ import { prisma } from './prisma'
 import { UserRole } from '@prisma/client'
 
 export interface AccessRequirement {
-  action: 'read' | 'write' | 'delete' | 'admin'
-  resource?: 'department' | 'position' | 'sharepoint' | 'user'
+  action: 'read' | 'write' | 'delete' | 'admin' | 'update' | 'create'
+  resource?: 'department' | 'position' | 'sharepoint' | 'user' | 'group' | 'mailbox'
 }
 
 export interface UserWithRelations {

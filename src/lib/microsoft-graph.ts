@@ -142,6 +142,24 @@ export class MicrosoftGraphAPI {
     }
   }
 
+  // Helper method to get access token from session user
+  private async getAccessTokenFromSession(): Promise<string> {
+    const session = await auth()
+    if (!session?.user) {
+      throw new Error('No authenticated session found')
+    }
+
+    // Get user from database to access their Microsoft account
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email! },
+      include: { accounts: true }
+    })
+    
+    if (!user) throw new Error('User not found in database')
+    
+    return await this.getValidAccessToken(user.id)
+  }
+
   // Helper method to get valid access token with automatic refresh
   private async getValidAccessToken(userId: string): Promise<string> {
     const user = await prisma.user.findUnique({
@@ -331,10 +349,7 @@ export class MicrosoftGraphAPI {
   }
 
   async sendMail(subject: string, htmlBody: string, to: string[]): Promise<void> {
-    const session = await auth()
-    if (!session?.user || !session.accessToken) {
-      throw new Error('No authenticated session or access token found')
-    }
+    const accessToken = await this.getAccessTokenFromSession()
 
     const payload = {
       message: {
@@ -348,7 +363,7 @@ export class MicrosoftGraphAPI {
     const res = await fetch(`${this.baseUrl}/me/sendMail`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
@@ -356,6 +371,7 @@ export class MicrosoftGraphAPI {
     if (!res.ok) {
       const t = await res.text()
       console.error('Graph sendMail failed:', t)
+      throw new Error(`Failed to send email: ${t}`)
     }
   }
 
@@ -788,11 +804,10 @@ export class MicrosoftGraphAPI {
   }
 
   async getMailFolders(): Promise<GraphMailFolder[]> {
-    const session = await auth()
-    if (!session?.user || !session.accessToken) throw new Error('No authenticated session or access token found')
+    const accessToken = await this.getAccessTokenFromSession()
     const res = await fetch(`${this.baseUrl}/me/mailFolders?$select=id,displayName,childFolderCount,totalItemCount,unreadItemCount`, {
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       }
     })
@@ -806,11 +821,10 @@ export class MicrosoftGraphAPI {
   }
 
   async getAllMailFolders(): Promise<GraphMailFolder[]> {
-    const session = await auth()
-    if (!session?.user || !session.accessToken) throw new Error('No authenticated session or access token found')
+    const accessToken = await this.getAccessTokenFromSession()
 
     const headers = {
-      'Authorization': `Bearer ${session.accessToken}`,
+      'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     }
 
@@ -841,8 +855,7 @@ export class MicrosoftGraphAPI {
     nextLink?: string,
     folderId?: string
   ): Promise<{ value: GraphEmail[]; nextLink?: string }> {
-    const session = await auth()
-    if (!session?.user || !session.accessToken) throw new Error('No authenticated session or access token found')
+    const accessToken = await this.getAccessTokenFromSession()
 
     let url: string
     if (nextLink) {
@@ -859,7 +872,7 @@ export class MicrosoftGraphAPI {
 
     const res = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       }
     })

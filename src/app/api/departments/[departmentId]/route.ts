@@ -8,8 +8,8 @@ const updateDepartmentSchema = z.object({
   name: z.string().min(1, 'Name is required').optional(),
   code: z.string().min(1, 'Code is required').toUpperCase().optional(),
   description: z.string().optional(),
-  parentId: z.string().optional(),
-  managerId: z.string().optional(),
+  parentId: z.string().nullable().optional(),
+  managerId: z.string().nullable().optional(),
 })
 
 // GET /api/departments/[departmentId] - Get a specific department
@@ -126,7 +126,7 @@ export async function PUT(
     }
 
     // Validate parent department exists if provided
-    if (validatedData.parentId) {
+    if (validatedData.parentId && validatedData.parentId !== null) {
       if (validatedData.parentId === departmentId) {
         return NextResponse.json(
           { error: 'Department cannot be its own parent' },
@@ -156,7 +156,7 @@ export async function PUT(
     }
 
     // Validate manager exists if provided
-    if (validatedData.managerId) {
+    if (validatedData.managerId && validatedData.managerId !== null && validatedData.managerId !== '') {
       const manager = await prisma.user.findUnique({
         where: { id: validatedData.managerId },
       })

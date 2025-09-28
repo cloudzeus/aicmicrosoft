@@ -24,7 +24,7 @@ interface EmailComposeModalProps {
   onClose: () => void
   onSend: (data: { recipients: string[], subject: string, body: string }) => Promise<void>
   originalEmail?: Email | null
-  mode: 'reply' | 'replyAll' | 'forward'
+  mode: 'reply' | 'replyAll' | 'forward' | 'compose'
   users?: User[]
 }
 
@@ -126,12 +126,12 @@ export function EmailComposeModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[80vw] max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-[90vw] w-[90vw] max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-green-600" />
             <DialogTitle className="text-sm font-semibold text-gray-900">
-              {mode === 'reply' ? 'Reply to Email' : mode === 'replyAll' ? 'Reply to All' : mode === 'forward' ? 'Forward Email' : 'Compose Email'}
+              {mode === 'reply' ? 'Reply to Email' : mode === 'replyAll' ? 'Reply to All' : mode === 'forward' ? 'Forward Email' : mode === 'compose' ? 'Compose Email' : 'Compose Email'}
             </DialogTitle>
           </div>
         </DialogHeader>

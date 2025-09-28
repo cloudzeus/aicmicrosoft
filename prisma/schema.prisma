@@ -119,6 +119,8 @@ model Department {
   positions   Position[]
   userDepartments UserDepartment[]
   sharePoints DepartmentSharePoint[]
+  mailboxes   DepartmentMailbox[]
+  groups      DepartmentGroup[]
 
   @@index([parentId])
   @@index([managerId])
@@ -189,6 +191,43 @@ model DepartmentSharePoint {
   @@index([isFromTenantSync])
 }
 
+model DepartmentMailbox {
+  id           String      @id @default(cuid())
+  departmentId String
+  mailboxId    String      @unique
+  emailAddress String
+  displayName  String
+  accessLevel  AccessLevel @default(READ)
+  isFromTenantSync Boolean @default(false)  // Track if synced from Microsoft Graph
+  tenantMailboxId String?  // Microsoft Graph Mailbox ID if synced
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@index([departmentId])
+  @@index([isFromTenantSync])
+}
+
+model DepartmentGroup {
+  id           String      @id @default(cuid())
+  departmentId String
+  groupId      String      @unique
+  displayName  String
+  emailAddress String?
+  description  String?
+  groupType    GroupType   @default(SECURITY)
+  isFromTenantSync Boolean @default(false)  // Track if synced from Microsoft Graph
+  tenantGroupId String?    // Microsoft Graph Group ID if synced
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@index([departmentId])
+  @@index([isFromTenantSync])
+}
+
 enum UserRole {
   ADMIN
   USER
@@ -199,4 +238,11 @@ enum AccessLevel {
   READ
   CONTRIBUTE
   OWNER
+}
+
+enum GroupType {
+  SECURITY
+  DISTRIBUTION
+  UNIFIED
+  MICROSOFT365
 }

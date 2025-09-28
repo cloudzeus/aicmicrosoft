@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { Trash2, Forward, FolderPlus, Reply, ReplyAll, Mail, Paperclip, Clock } from "lucide-react"
 import { format } from "date-fns"
-import { deleteEmailAction, forwardEmailAction, replyEmailAction } from "./actions"
+import { deleteEmailAction, forwardEmailAction, replyEmailAction, composeEmailAction } from "./actions"
 import { Email } from "./types"
 import { usePathname } from "next/navigation"
 import { EmailModal } from "@/components/emails/email-modal"
@@ -18,6 +18,7 @@ interface EmailListProps {
   nextLink: string | null
   currentFolder: string
   currentFolderId?: string
+  onComposeEmail?: () => void
 }
 
 interface User {
@@ -26,11 +27,11 @@ interface User {
   email: string
 }
 
-export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFolderId }: EmailListProps) {
+export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFolderId, onComposeEmail }: EmailListProps) {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showComposeModal, setShowComposeModal] = useState(false)
-  const [composeMode, setComposeMode] = useState<'reply' | 'replyAll' | 'forward'>('reply')
+  const [composeMode, setComposeMode] = useState<'reply' | 'replyAll' | 'forward' | 'compose'>('reply')
   const [users, setUsers] = useState<User[]>([])
   const pathname = usePathname()
 
@@ -81,29 +82,43 @@ export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFol
     setShowComposeModal(true)
   }
 
-  const handleSendEmail = async (data: { recipients: string[], subject: string, body: string }) => {
-    if (!selectedEmail) return
+  const handleComposeEmail = () => {
+    if (onComposeEmail) {
+      onComposeEmail()
+    } else {
+      setSelectedEmail(null)
+      setComposeMode('compose')
+      setShowComposeModal(true)
+    }
+  }
 
+  const handleSendEmail = async (data: { recipients: string[], subject: string, body: string }) => {
     try {
       let result
       if (composeMode === 'reply') {
+        if (!selectedEmail) return
         result = await replyEmailAction(selectedEmail.messageId, data.body, pathname)
       } else if (composeMode === 'replyAll') {
+        if (!selectedEmail) return
         result = await replyEmailAction(selectedEmail.messageId, data.body, pathname)
-      } else {
+      } else if (composeMode === 'forward') {
+        if (!selectedEmail) return
         result = await forwardEmailAction(selectedEmail.messageId, data.recipients, data.body, pathname)
+      } else {
+        // Compose new email
+        result = await composeEmailAction(data.recipients, data.subject, data.body, pathname)
       }
       
       if (result.success) {
-        console.log(`Email ${composeMode}ed successfully`)
+        console.log(`Email ${composeMode === 'compose' ? 'sent' : composeMode + 'ed'} successfully`)
         setShowComposeModal(false)
         setSelectedEmail(null)
       } else {
         alert(result.error)
       }
     } catch (error) {
-      console.error(`Failed to ${composeMode} email:`, error)
-      alert(`Failed to ${composeMode} email`)
+      console.error(`Failed to ${composeMode === 'compose' ? 'send' : composeMode} email:`, error)
+      alert(`Failed to ${composeMode === 'compose' ? 'send' : composeMode} email`)
     }
   }
 

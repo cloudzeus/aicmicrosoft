@@ -156,7 +156,8 @@ export const authConfig = {
       if (session.user && token) {
         session.user.id = token.sub!
         session.user.role = (token.role as UserRole) || UserRole.USER
-        session.accessToken = token.accessToken as string || ""
+        // Don't store accessToken in session to avoid cookie size limit
+        // Access token will be fetched from database when needed
         if (token.error) {
           Object.assign(session, { error: token.error })
         }

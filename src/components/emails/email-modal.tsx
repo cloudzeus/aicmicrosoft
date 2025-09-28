@@ -51,7 +51,7 @@ export function EmailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[95vh] overflow-hidden">
+      <DialogContent className="max-w-[90vw] w-[90vw] max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

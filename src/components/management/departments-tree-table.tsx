@@ -65,6 +65,9 @@ interface DepartmentsTreeTableProps {
   onDeleteDepartment: (department: Department) => void
   onAssignUsers: (department: Department) => void
   onManageSharePoints: (department: Department) => void
+  onManageMailboxes: (department: Department) => void
+  onManageGroups: (department: Department) => void
+  onCreateDepartment: () => void
   onDataChange: () => void
 }
 
@@ -75,6 +78,9 @@ export function DepartmentsTreeTable({
   onDeleteDepartment,
   onAssignUsers,
   onManageSharePoints,
+  onManageMailboxes,
+  onManageGroups,
+  onCreateDepartment,
   onDataChange
 }: DepartmentsTreeTableProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
@@ -386,6 +392,20 @@ export function DepartmentsTreeTable({
       }
     },
     {
+      label: 'Manage Mailboxes',
+      onClick: (id: string) => {
+        const department = departments.find(d => d.id === id)
+        if (department) onManageMailboxes(department)
+      }
+    },
+    {
+      label: 'Manage Groups',
+      onClick: (id: string) => {
+        const department = departments.find(d => d.id === id)
+        if (department) onManageGroups(department)
+      }
+    },
+    {
       label: 'Edit Department',
       onClick: (id: string) => {
         const department = departments.find(d => d.id === id)
@@ -422,7 +442,10 @@ export function DepartmentsTreeTable({
                 className="pl-8 w-64 text-xs"
               />
             </div>
-            <Button className="flex items-center gap-2 text-xs">
+            <Button 
+              onClick={onCreateDepartment}
+              className="flex items-center gap-2 text-xs"
+            >
               <Plus className="w-3 h-3" />
               Add Department
             </Button>

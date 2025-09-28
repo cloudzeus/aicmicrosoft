@@ -67,3 +67,19 @@ export async function markEmailAsReadAction(messageId: string, isRead: boolean, 
     return { success: false, error: "Failed to mark email as read" }
   }
 }
+
+export async function composeEmailAction(recipients: string[], subject: string, body: string, currentPath: string) {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Unauthorized")
+  }
+
+  try {
+    await graphAPI.sendMail(subject, body, recipients)
+    revalidatePath(currentPath)
+    return { success: true }
+  } catch (error) {
+    console.error("Error sending email:", error)
+    return { success: false, error: "Failed to send email" }
+  }
+}

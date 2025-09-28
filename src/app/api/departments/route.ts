@@ -8,16 +8,16 @@ const createDepartmentSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   code: z.string().min(1, 'Code is required').toUpperCase(),
   description: z.string().optional(),
-  parentId: z.string().optional(),
-  managerId: z.string().optional(),
+  parentId: z.string().nullable().optional(),
+  managerId: z.string().nullable().optional(),
 })
 
 const updateDepartmentSchema = z.object({
   name: z.string().min(1, 'Name is required').optional(),
   code: z.string().min(1, 'Code is required').toUpperCase().optional(),
   description: z.string().optional(),
-  parentId: z.string().optional(),
-  managerId: z.string().optional(),
+  parentId: z.string().nullable().optional(),
+  managerId: z.string().nullable().optional(),
 })
 
 // GET /api/departments - List all departments with optional filtering
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate parent department exists if provided
-    if (validatedData.parentId) {
+    if (validatedData.parentId && validatedData.parentId !== null) {
       const parentDepartment = await prisma.department.findUnique({
         where: { id: validatedData.parentId },
       })
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate manager exists if provided
-    if (validatedData.managerId) {
+    if (validatedData.managerId && validatedData.managerId !== null && validatedData.managerId !== '') {
       const manager = await prisma.user.findUnique({
         where: { id: validatedData.managerId },
       })

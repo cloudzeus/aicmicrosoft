@@ -87,7 +87,7 @@ export function DepartmentModal({
         code: department.code,
         description: department.description || "",
         parentId: department.parentId || "none",
-        managerId: department.managerId || ""
+        managerId: department.managerId || "none"
       })
       // Set current positions for this department
       const currentPositions = positions.filter(pos => pos.departmentId === department.id)
@@ -97,8 +97,8 @@ export function DepartmentModal({
         name: "",
         code: "",
         description: "",
-        parentId: "",
-        managerId: ""
+        parentId: "none",
+        managerId: "none"
       })
       setSelectedPositions([])
     }
@@ -115,18 +115,27 @@ export function DepartmentModal({
       
       const method = department ? "PUT" : "POST"
       
+      const requestData = {
+        name: formData.name,
+        code: formData.code.toUpperCase(),
+        description: formData.description || undefined,
+        parentId: formData.parentId === "none" ? null : formData.parentId || undefined,
+        managerId: formData.managerId && formData.managerId !== "none" ? formData.managerId : null,
+      }
+
+      console.log('Department submit data:', {
+        formData,
+        requestData,
+        method,
+        url
+      })
+      
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: formData.name,
-          code: formData.code.toUpperCase(),
-          description: formData.description || undefined,
-          parentId: formData.parentId === "none" ? null : formData.parentId || undefined,
-          managerId: formData.managerId || undefined,
-        }),
+        body: JSON.stringify(requestData),
       })
 
       if (!response.ok) {
@@ -306,7 +315,7 @@ export function DepartmentModal({
                   <SelectValue placeholder="Select manager" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No manager assigned</SelectItem>
+                  <SelectItem value="none">No manager assigned</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name || user.email}
