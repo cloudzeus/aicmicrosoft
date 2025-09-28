@@ -83,6 +83,39 @@ export function SmartAttendeesInput({
     return false
   }, [])
 
+  // Select a user
+  const selectUser = useCallback((user: User) => {
+    const attendees = parseAttendees(value)
+    const email = user.mail || user.userPrincipalName
+    
+    if (!attendees.includes(email)) {
+      // Replace the @trigger part with the selected user
+      const beforeAt = value.substring(0, atPosition)
+      const afterTrigger = value.substring(cursorPosition)
+      const newValue = beforeAt + email + ', ' + afterTrigger
+      
+      onChange(newValue)
+      setShowUserList(false)
+      setShowAtTrigger(false)
+      setSelectedIndex(-1)
+      
+      // Focus back to input after the email
+      setTimeout(() => {
+        if (inputRef.current) {
+          const newPosition = beforeAt.length + email.length + 2
+          inputRef.current.setSelectionRange(newPosition, newPosition)
+        }
+      }, 0)
+    }
+  }, [value, atPosition, cursorPosition, onChange, parseAttendees])
+
+  // Remove an attendee
+  const removeAttendee = useCallback((emailToRemove: string) => {
+    const attendees = parseAttendees(value)
+    const filteredAttendees = attendees.filter(email => email !== emailToRemove)
+    onChange(attendeesToString(filteredAttendees))
+  }, [value, onChange, parseAttendees, attendeesToString])
+
   // Handle input change
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value
@@ -125,39 +158,6 @@ export function SmartAttendeesInput({
         break
     }
   }, [showUserList, filteredUsers, selectedIndex, selectUser])
-
-  // Select a user
-  const selectUser = useCallback((user: User) => {
-    const attendees = parseAttendees(value)
-    const email = user.mail || user.userPrincipalName
-    
-    if (!attendees.includes(email)) {
-      // Replace the @trigger part with the selected user
-      const beforeAt = value.substring(0, atPosition)
-      const afterTrigger = value.substring(cursorPosition)
-      const newValue = beforeAt + email + ', ' + afterTrigger
-      
-      onChange(newValue)
-      setShowUserList(false)
-      setShowAtTrigger(false)
-      setSelectedIndex(-1)
-      
-      // Focus back to input after the email
-      setTimeout(() => {
-        if (inputRef.current) {
-          const newPosition = beforeAt.length + email.length + 2
-          inputRef.current.setSelectionRange(newPosition, newPosition)
-        }
-      }, 0)
-    }
-  }, [value, atPosition, cursorPosition, onChange, parseAttendees])
-
-  // Remove an attendee
-  const removeAttendee = useCallback((emailToRemove: string) => {
-    const attendees = parseAttendees(value)
-    const filteredAttendees = attendees.filter(email => email !== emailToRemove)
-    onChange(attendeesToString(filteredAttendees))
-  }, [value, onChange, parseAttendees, attendeesToString])
 
   // Filter users based on search term
   useEffect(() => {

@@ -175,7 +175,7 @@ export default function DebugPage() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-600">Tenant ID:</label>
-                      <p className="text-sm font-mono text-xs">{debugInfo.database.user?.tenantId || 'N/A'}</p>
+                      <p className="text-xs font-mono">{debugInfo.database.user?.tenantId || 'N/A'}</p>
                     </div>
                   </>
                 ) : (

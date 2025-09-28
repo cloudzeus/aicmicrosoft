@@ -62,6 +62,13 @@ interface SyncStatusData {
       id: string;
       displayName: string;
     }>
+    sharePointSites?: Array<{
+      id: string;
+      displayName: string;
+      webUrl: string;
+      description?: string;
+    }>
+    error?: string;
   }
   statistics: {
     users: { total: number; fromTenantSync: number; local: number }
@@ -227,7 +234,7 @@ export function SyncManagementDashboard() {
   }
 
   // Filter items by search term
-  const filterItems = (items: Array<{ name?: string; email?: string; displayName?: string; code?: string }>) => {
+  const filterItems = (items: Array<{ id: string; name?: string; email?: string; displayName?: string; code?: string; jobTitle?: string; role?: string; description?: string; isFromTenantSync?: boolean; _count?: { userDepartments: number; positions: number; sharePoints: number; userPositions: number }; department?: { name: string; code: string }; siteUrl?: string; accessLevel?: string }>) => {
     if (!searchTerm) return items
     
     const term = searchTerm.toLowerCase()
@@ -716,7 +723,7 @@ export function SyncManagementDashboard() {
                     Tenant SharePoint Sites ({data.tenant.sharePointSites.length})
                   </h4>
                   <div className="grid gap-3">
-                    {data.tenant.sharePointSites.slice(0, 10).map((site: { displayName?: string; webUrl?: string }, index: number) => (
+                    {data.tenant.sharePointSites.slice(0, 10).map((site, index: number) => (
                       <Card key={index} className="p-4">
                         <div className="flex items-center justify-between">
                           <div>

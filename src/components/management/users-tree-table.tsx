@@ -218,7 +218,7 @@ export function UsersTreeTable({
             <div className="font-medium text-xs text-gray-900">{node.name}</div>
             {node.data?.email && (
               <div className="text-xs text-gray-500 mt-0.5">
-                {node.data.email}
+                {String(node.data.email)}
               </div>
             )}
           </div>
@@ -233,7 +233,7 @@ export function UsersTreeTable({
         if (node.type !== 'User') return <div className="text-xs text-gray-400">-</div>
         
         // Get departments from derived departments (based on positions)
-        const departments = node.data?.derivedDepartments || []
+        const departments = (node.data?.derivedDepartments as Array<{ id: string; name: string; code: string }>) || []
         
         if (departments.length === 0) {
           return <div className="text-xs text-gray-400">No departments</div>
@@ -241,7 +241,7 @@ export function UsersTreeTable({
 
         return (
           <div className="space-y-1">
-            {departments.slice(0, 2).map((dept: { id: string; name: string; code: string }) => (
+            {departments.slice(0, 2).map((dept) => (
               <div key={dept.id} className="flex items-center gap-1">
                 <Building className="w-3 h-3 text-blue-600" />
                 <span className="text-xs text-gray-700">
@@ -265,14 +265,14 @@ export function UsersTreeTable({
       render: (node: TreeNode) => {
         if (node.type !== 'User') return <div className="text-xs text-gray-400">-</div>
         
-        const positions = node.data?.userPositions || []
+        const positions = (node.data?.userPositions as Array<{ id: string; position: { name: string; department: { name: string } } }>) || []
         if (positions.length === 0) {
           return <div className="text-xs text-gray-400">No positions</div>
         }
 
         return (
           <div className="space-y-1">
-            {positions.slice(0, 2).map((up: { id: string; position: { name: string; department: { name: string } } }) => (
+            {positions.slice(0, 2).map((up) => (
               <div key={up.id} className="flex items-center gap-1">
                 <Briefcase className="w-3 h-3 text-purple-600" />
                 <span className="text-xs text-gray-700">
@@ -309,7 +309,7 @@ export function UsersTreeTable({
       render: (node: TreeNode) => {
         if (node.type !== 'User') return <div className="text-xs text-gray-400">-</div>
         
-        const user = node.data
+        const user = node.data as { name?: string; email?: string; tenantId?: string; isFromTenantSync?: boolean }
         if (!user) return <div className="text-xs text-gray-400">-</div>
 
         return (
@@ -317,7 +317,7 @@ export function UsersTreeTable({
             <Avatar className="w-6 h-6 border border-gray-200">
               <AvatarImage 
                 src={user.isFromTenantSync && user.tenantId ? `/api/users/${user.tenantId}/avatar` : null} 
-                alt={user.name || user.email}
+                alt={user.name || user.email || 'User'}
                 onLoad={() => {
                   console.log('Avatar loaded successfully for:', user.name || user.email)
                 }}
@@ -327,7 +327,7 @@ export function UsersTreeTable({
                 }}
               />
               <AvatarFallback className="text-xs bg-black text-orange-700 font-medium">
-                {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                {user.name ? user.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U')}
               </AvatarFallback>
             </Avatar>
           </div>

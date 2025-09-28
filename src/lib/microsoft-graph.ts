@@ -156,7 +156,7 @@ export class MicrosoftGraphAPI {
     
     // Check if token is expired (with 5 minute buffer)
     const now = Math.floor(Date.now() / 1000)
-    const expiresAt = microsoftAccount.expires_at ? Math.floor(microsoftAccount.expires_at.getTime() / 1000) : 0
+    const expiresAt = microsoftAccount.expires_at ? Math.floor(microsoftAccount.expires_at / 1000) : 0
     
     if (expiresAt - now < 300) { // 5 minutes buffer
       if (!microsoftAccount.refresh_token) {
@@ -171,7 +171,7 @@ export class MicrosoftGraphAPI {
           where: { id: microsoftAccount.id },
           data: {
             access_token: refreshedTokens.accessToken,
-            expires_at: new Date(Date.now() + refreshedTokens.expiresIn * 1000)
+            expires_at: Date.now() + refreshedTokens.expiresIn * 1000
           }
         })
         

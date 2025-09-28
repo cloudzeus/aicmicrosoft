@@ -96,16 +96,20 @@ export function PositionsTreeTable({
       if (!department) return
 
       // Aggregate all assigned users across all positions in this department
-      const allDepartmentUsers = new Map<string, { id: string; name: string; email: string; image?: string; tenantId: string }>()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const allDepartmentUsers = new Map<string, { id: string; name: string; email: string; image?: string; tenantId: string; jobTitle?: any }>()
       deptPositions.forEach(position => {
         position.userPositions?.forEach(up => {
           if (!allDepartmentUsers.has(up.user.id)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const user = up.user as any
             allDepartmentUsers.set(up.user.id, {
               id: up.user.id,
               name: up.user.name,
               email: up.user.email,
-              jobTitle: up.user.jobTitle,
-              image: up.user.tenantId ? `/api/users/${up.user.tenantId}/avatar` : null
+              jobTitle: user.jobTitle,
+              image: user.tenantId ? `/api/users/${user.tenantId}/avatar` : null,
+              tenantId: user.tenantId
             })
           }
         })
@@ -143,7 +147,8 @@ export function PositionsTreeTable({
               name: up.user.name,
               email: up.user.email,
               jobTitle: up.user.jobTitle,
-              image: up.user.tenantId ? `/api/users/${up.user.tenantId}/avatar` : null
+               // eslint-disable-next-line @typescript-eslint/no-explicit-any
+               image: (up.user as any).tenantId ? `/api/users/${(up.user as any).tenantId}/avatar` : null
             })) || []
           }
         }))
@@ -244,7 +249,7 @@ export function PositionsTreeTable({
             <div className="font-medium text-xs text-gray-900">{node.name}</div>
             {node.type === 'Position' && node.data?.description && (
               <div className="text-xs text-gray-500 mt-0.5">
-                {node.data.description}
+                {String(node.data.description)}
               </div>
             )}
           </div>
@@ -291,8 +296,10 @@ export function PositionsTreeTable({
       key: 'assignedUsers',
       label: 'Assigned Users',
       width: '20%',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (node: TreeNode) => {
-        const assignedUsers = node.data?.assignedUsers || []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const assignedUsers = (node.data?.assignedUsers as any[]) || []
         const maxVisible = 3
         const visibleUsers = assignedUsers.slice(0, maxVisible)
         const remainingCount = assignedUsers.length - maxVisible
@@ -314,7 +321,7 @@ export function PositionsTreeTable({
 
         return (
           <div className="flex items-center gap-1">
-            {visibleUsers.map((user: { id: string; name: string; email: string; image?: string }, index: number) => (
+            {visibleUsers.map((user: { id: string; name: string; email: string; image?: string; jobTitle?: string }, index: number) => (
               <Tooltip key={user.id}>
                 <TooltipTrigger asChild>
                   <div className="relative">
@@ -443,7 +450,13 @@ export function PositionsTreeTable({
             code: selectedPosition.department.code,
             positions: [selectedPosition]
           }}
-          assignedUsers={selectedPosition.userPositions || []}
+          assignedUsers={(selectedPosition.userPositions || []).map(up => ({
+            ...up,
+            user: {
+              ...up.user,
+              role: 'USER' // Default role since it's not provided in the data
+            }
+          }))}
           allUsers={users}
           onSuccess={() => {
             handleCloseUserModal()

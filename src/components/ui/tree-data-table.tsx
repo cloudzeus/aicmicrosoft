@@ -239,7 +239,10 @@ export function TreeDataTable({
           <Checkbox
             checked={allSelected}
             ref={(el) => {
-              if (el) el.indeterminate = someSelected && !allSelected
+              if (el) {
+                const input = el.querySelector('input') as HTMLInputElement
+                if (input) input.indeterminate = someSelected && !allSelected
+              }
             }}
             onCheckedChange={(checked) => onSelectAll?.(!!checked)}
             className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
