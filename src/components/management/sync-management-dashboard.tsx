@@ -27,12 +27,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface SyncStatusData {
   local: {
-    users: any[]
-    departments: any[]
-    positions: any[]
-    sharePoints: any[]
+    users: Array<{
+      id: string;
+      name: string | null;
+      email: string;
+      role: string;
+      isFromTenantSync: boolean;
+    }>
+    departments: Array<{
+      id: string;
+      name: string;
+      code: string;
+      description: string | null;
+    }>
+    positions: Array<{
+      id: string;
+      name: string;
+      description: string | null;
+    }>
+    sharePoints: Array<{
+      id: string;
+      displayName: string;
+      url: string;
+      accessLevel: string;
+    }>
   }
-  tenant?: any
+  tenant?: {
+    users?: Array<{
+      id: string;
+      displayName: string;
+      mail: string;
+    }>
+    departments?: Array<{
+      id: string;
+      displayName: string;
+    }>
+  }
   statistics: {
     users: { total: number; fromTenantSync: number; local: number }
     departments: { total: number; fromTenantSync: number; local: number }
@@ -105,7 +135,7 @@ export function SyncManagementDashboard() {
   const selectAllLocal = (type: string) => {
     if (!data) return
     
-    const items = data.local[type as keyof typeof data.local] as any[]
+    const items = data.local[type as keyof typeof data.local] as Array<{ id: string; isFromTenantSync?: boolean }>
     const localItems = items.filter(item => !item.isFromTenantSync)
     
     const newSelection = { ...selectedItems }
@@ -152,7 +182,7 @@ export function SyncManagementDashboard() {
   const getSelectedItemsByType = (type: string) => {
     if (!data) return []
     
-    const items = data.local[type as keyof typeof data.local] as any[]
+    const items = data.local[type as keyof typeof data.local] as Array<{ id: string; isFromTenantSync?: boolean }>
     return items.filter(item => selectedItems[item.id] && !item.isFromTenantSync)
   }
 
@@ -197,7 +227,7 @@ export function SyncManagementDashboard() {
   }
 
   // Filter items by search term
-  const filterItems = (items: any[]) => {
+  const filterItems = (items: Array<{ name?: string; email?: string; displayName?: string; code?: string }>) => {
     if (!searchTerm) return items
     
     const term = searchTerm.toLowerCase()
@@ -654,7 +684,7 @@ export function SyncManagementDashboard() {
                     Tenant Users ({data.tenant.users.length})
                   </h4>
                   <div className="grid gap-3">
-                    {data.tenant.users.slice(0, 10).map((user: any, index: number) => (
+                    {data.tenant.users.slice(0, 10).map((user: { displayName?: string; mail?: string; userPrincipalName?: string; jobTitle?: string }, index: number) => (
                       <Card key={index} className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
@@ -686,7 +716,7 @@ export function SyncManagementDashboard() {
                     Tenant SharePoint Sites ({data.tenant.sharePointSites.length})
                   </h4>
                   <div className="grid gap-3">
-                    {data.tenant.sharePointSites.slice(0, 10).map((site: any, index: number) => (
+                    {data.tenant.sharePointSites.slice(0, 10).map((site: { displayName?: string; webUrl?: string }, index: number) => (
                       <Card key={index} className="p-4">
                         <div className="flex items-center justify-between">
                           <div>

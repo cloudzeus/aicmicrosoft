@@ -18,7 +18,7 @@ export interface UserWithRelations {
   aadObjectId: string | null
   tenantId: string | null
   jobTitle: string | null
-  departmentExport: any
+  departmentExport: unknown
   createdAt: Date
   updatedAt: Date
   userDepartments: Array<{

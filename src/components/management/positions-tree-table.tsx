@@ -96,7 +96,7 @@ export function PositionsTreeTable({
       if (!department) return
 
       // Aggregate all assigned users across all positions in this department
-      const allDepartmentUsers = new Map<string, any>()
+      const allDepartmentUsers = new Map<string, { id: string; name: string; email: string; image?: string; tenantId: string }>()
       deptPositions.forEach(position => {
         position.userPositions?.forEach(up => {
           if (!allDepartmentUsers.has(up.user.id)) {
@@ -314,7 +314,7 @@ export function PositionsTreeTable({
 
         return (
           <div className="flex items-center gap-1">
-            {visibleUsers.map((user: any, index: number) => (
+            {visibleUsers.map((user: { id: string; name: string; email: string; image?: string }, index: number) => (
               <Tooltip key={user.id}>
                 <TooltipTrigger asChild>
                   <div className="relative">

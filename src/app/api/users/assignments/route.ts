@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const positionId = searchParams.get('positionId')
     const includeInactive = searchParams.get('includeInactive') === 'true'
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     
     if (departmentId) {
       where.userDepartments = {

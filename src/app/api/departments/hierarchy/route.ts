@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Build hierarchy tree
-    const buildHierarchy = (parentId: string | null = null): any[] => {
+    const buildHierarchy = (parentId: string | null = null): typeof departments => {
       return departments
         .filter(dept => dept.parentId === parentId)
         .map(dept => ({

@@ -2,7 +2,7 @@
 
 import { signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { FaSignOutAlt, FaTrash } from "react-icons/fa"
+import { FaTrash } from "react-icons/fa"
 
 export function ClearSessionButton() {
   const handleClearSession = async () => {

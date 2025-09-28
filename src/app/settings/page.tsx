@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
-import { Settings, User, Bell, Shield, Database } from "lucide-react"
+import { User, Bell, Shield, Database } from "lucide-react"
 
 export default async function SettingsPage() {
   const session = await auth()

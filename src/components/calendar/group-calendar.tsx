@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, momentLocalizer, Views, View } from "react-big-calendar"
 import moment from "moment"
-import { FaCalendarAlt, FaUsers, FaClock, FaUser, FaBuilding, FaChevronLeft, FaChevronRight } from "react-icons/fa"
+import { FaCalendarAlt, FaUsers, FaUser } from "react-icons/fa"
 import "react-big-calendar/lib/css/react-big-calendar.css"
 import "./calendar-styles.css"
 
@@ -48,7 +48,6 @@ export function GroupCalendar({ selectedUsers, onUserSelect }: GroupCalendarProp
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState<View>(Views.MONTH)
   const [date, setDate] = useState(new Date())
-  const [selectedDate, setSelectedDate] = useState(new Date())
   const [errorMessages, setErrorMessages] = useState<string[]>([])
 
   // Fetch users from tenant
@@ -236,7 +235,7 @@ export function GroupCalendar({ selectedUsers, onUserSelect }: GroupCalendarProp
     } finally {
       setLoading(false)
     }
-  }, [selectedUsers])
+  }, [selectedUsers, getRangeISO])
 
   // Event style getter for different users
   const eventStyleGetter = (event: GroupEvent) => {

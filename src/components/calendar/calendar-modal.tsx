@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser, FaSpinner, FaExclamationTriangle, FaList, FaTable } from "react-icons/fa"
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser, FaSpinner, FaExclamationTriangle, FaList } from "react-icons/fa"
 import { ReactBigCalendar } from "./react-big-calendar"
 import "./calendar-styles.css"
 

@@ -19,7 +19,7 @@ export interface TreeNode {
   children?: TreeNode[]
   isExpanded?: boolean
   isSelected?: boolean
-  data?: any // Additional data for the row
+  data?: Record<string, unknown> // Additional data for the row
 }
 
 interface TreeDataTableProps {

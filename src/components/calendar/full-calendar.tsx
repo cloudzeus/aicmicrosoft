@@ -1,18 +1,17 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Calendar, momentLocalizer, Views, View, SlotInfo, Event } from "react-big-calendar"
+import { Calendar, momentLocalizer, Views, View, SlotInfo } from "react-big-calendar"
 import moment from "moment"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FaCalendarAlt, FaList, FaTable, FaClock, FaPlus, FaEdit, FaTrash, FaMapMarkerAlt, FaUsers, FaVideo, FaBell, FaSearch } from "react-icons/fa"
+import { FaCalendarAlt, FaList, FaTable, FaClock, FaPlus, FaEdit, FaTrash, FaUsers, FaVideo, FaBell } from "react-icons/fa"
 import { SmartAttendeesInput } from "@/components/ui/smart-attendees-input"
 import "react-big-calendar/lib/css/react-big-calendar.css"
 import "./calendar-styles.css"
@@ -57,15 +56,15 @@ interface EventFormData {
 
 export function FullCalendar() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
-  const [loading, setLoading] = useState(false)
   const [view, setView] = useState<View>(Views.MONTH)
   const [date, setDate] = useState(new Date())
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [isCreatingEvent, setIsCreatingEvent] = useState(false)
   const [isEditingEvent, setIsEditingEvent] = useState(false)
-  const [users, setUsers] = useState<Array<{ id: string; displayName: string; mail: string }>>([])
-  const [userSearch, setUserSearch] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [userSearch, setUserSearch] = useState('')
   const [showUserSearch, setShowUserSearch] = useState(false)
+  const [users, setUsers] = useState<Array<{ id: string; displayName: string; mail: string }>>([])
   const [formData, setFormData] = useState<EventFormData>({
     title: "",
     start: new Date(),

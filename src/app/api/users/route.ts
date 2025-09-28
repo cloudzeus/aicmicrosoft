@@ -35,7 +35,23 @@ export async function GET(request: NextRequest) {
     console.log("Fetching users for:", session.user.email)
 
     // Try to get users from Microsoft Graph API first
-    let graphUsers: any[] = []
+    let graphUsers: Array<{
+      id: string;
+      name: string | null;
+      email: string;
+      displayName: string;
+      mail: string;
+      userPrincipalName?: string;
+      jobTitle?: string | null;
+      department?: string | null;
+      officeLocation?: string | null;
+      role: string;
+      tenantId: string;
+      isFromTenantSync: boolean;
+      userDepartments: unknown[];
+      userPositions: unknown[];
+      _count: { userDepartments: number; userPositions: number };
+    }> = []
     if (session.accessToken) {
       try {
         const response = await fetch('https://graph.microsoft.com/v1.0/users', {

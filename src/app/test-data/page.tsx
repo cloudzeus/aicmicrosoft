@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AppLayout } from "@/components/layout/app-layout"
 import { toast } from "sonner"
-import { RefreshCw, Database, Users, Building, Briefcase, UserCheck } from "lucide-react"
+import { RefreshCw, Users, Building, Briefcase, UserCheck } from "lucide-react"
 
 interface TestData {
   session: {
@@ -17,15 +17,34 @@ interface TestData {
   data: {
     departments: {
       count: number
-      sample: any[]
+      sample: Array<{
+        id: string;
+        name: string;
+        code: string;
+        _count: {
+          userDepartments: number;
+          positions: number;
+        };
+      }>
     }
     positions: {
       count: number
-      sample: any[]
+      sample: Array<{
+        id: string;
+        name: string;
+        _count: {
+          userPositions: number;
+        };
+      }>
     }
     users: {
       count: number
-      sample: any[]
+      sample: Array<{
+        id: string;
+        name: string | null;
+        email: string;
+        role: string;
+      }>
     }
     assignments: {
       userDepartments: number

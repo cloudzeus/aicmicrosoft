@@ -114,8 +114,8 @@ export function DepartmentsTreeTable({
     // Create a flat list of departments (no children since assignments are shown in columns)
     const treeNodes: TreeNode[] = filteredDepartments.map(department => {
       // Get users assigned to this department through positions
-      const departmentUsers = users.filter(user => 
-        user.userPositions?.some(up => 
+      const departmentUsers = users.filter((user: any) => 
+        user.userPositions?.some((up: any) => 
           up.position.department.id === department.id
         )
       )
@@ -147,7 +147,7 @@ export function DepartmentsTreeTable({
     })
 
     return treeNodes.sort((a, b) => a.name.localeCompare(b.name))
-  }, [departments, users, expandedNodes, selectedNodes, searchQuery])
+  }, [departments, users, selectedNodes, searchQuery])
 
   const handleToggleExpand = (id: string) => {
     setExpandedNodes(prev => {
@@ -268,7 +268,7 @@ export function DepartmentsTreeTable({
 
         return (
           <div className="space-y-1">
-            {positions.slice(0, 2).map((pos: any) => (
+            {positions.slice(0, 2).map((pos: { id: string; name: string }) => (
               <div key={pos.id} className="flex items-center gap-1">
                 <Briefcase className="w-3 h-3 text-purple-600" />
                 <span className="text-xs text-gray-700">
@@ -299,7 +299,7 @@ export function DepartmentsTreeTable({
 
         return (
           <div className="flex items-center -space-x-1">
-            {assignedUsers.slice(0, 3).map((user: any, index: number) => (
+            {assignedUsers.slice(0, 3).map((user: { id: string; name: string; email: string; image?: string }, index: number) => (
               <Tooltip key={user.id}>
                 <TooltipTrigger asChild>
                   <Avatar className="w-6 h-6 border-2 border-white">
@@ -336,7 +336,7 @@ export function DepartmentsTreeTable({
                   <div>
                     <div className="font-medium">+{assignedUsers.length - 3} more users</div>
                     <div className="text-gray-300">
-                      {assignedUsers.slice(3).map((user: any) => user.name || user.email).join(', ')}
+                      {assignedUsers.slice(3).map((user: { name?: string; email: string }) => user.name || user.email).join(', ')}
                     </div>
                   </div>
                 </TooltipContent>

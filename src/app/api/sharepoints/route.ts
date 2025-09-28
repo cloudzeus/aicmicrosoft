@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const departmentId = searchParams.get('departmentId')
     const accessLevel = searchParams.get('accessLevel')
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     
     if (departmentId) {
       where.departmentId = departmentId

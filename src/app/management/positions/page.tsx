@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Briefcase, Plus, Building, Database, Edit, Trash2, UserCheck } from "lucide-react"
+import { Briefcase } from "lucide-react"
 import { PositionModal } from "@/components/management/position-modal"
 import { PositionsTreeTable } from "@/components/management/positions-tree-table"
 import { AppLayout } from "@/components/layout/app-layout"
@@ -119,7 +117,7 @@ export default function PositionsManagementPage() {
         if (usersResponse.ok) {
           usersData = await usersResponse.json()
           console.log('Fetched users from Graph API:', usersData.users?.length || 0, 'users')
-          console.log('Sample users:', usersData.users?.slice(0, 3).map((u: any) => ({ id: u.id, name: u.name, email: u.email })))
+          console.log('Sample users:', usersData.users?.slice(0, 3).map((u: { id: string; name: string; email: string }) => ({ id: u.id, name: u.name, email: u.email })))
         } else {
           throw new Error('Graph API failed')
         }
@@ -129,7 +127,7 @@ export default function PositionsManagementPage() {
         if (localUsersResponse.ok) {
           usersData = await localUsersResponse.json()
           console.log('Fetched local users:', usersData.users?.length || 0, 'users')
-          console.log('Sample local users:', usersData.users?.slice(0, 3).map((u: any) => ({ id: u.id, name: u.name, email: u.email })))
+          console.log('Sample local users:', usersData.users?.slice(0, 3).map((u: { id: string; name: string; email: string }) => ({ id: u.id, name: u.name, email: u.email })))
         } else {
           console.error('Both Graph API and local users failed')
         }

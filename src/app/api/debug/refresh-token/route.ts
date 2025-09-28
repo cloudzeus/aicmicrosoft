@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     const now = Math.floor(Date.now() / 1000)
-    const expiresAt = microsoftAccount.expires_at ? Math.floor(microsoftAccount.expires_at.getTime() / 1000) : 0
+    const expiresAt = microsoftAccount.expires_at ? Math.floor(microsoftAccount.expires_at / 1000) : 0
     const timeUntilExpiry = expiresAt - now
 
     return NextResponse.json({

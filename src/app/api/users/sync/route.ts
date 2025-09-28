@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
           name: validatedData.name || validatedData.email, // Fallback to email if name is null
           email: validatedData.email,
           jobTitle: validatedData.jobTitle,
-          role: validatedData.role,
+          role: validatedData.role as 'USER' | 'ADMIN' | 'MANAGER',
           tenantId: validatedData.id,
           isFromTenantSync: true,
         },
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
           name: validatedData.name || validatedData.email, // Fallback to email if name is null
           email: validatedData.email,
           jobTitle: validatedData.jobTitle,
-          role: validatedData.role,
+          role: validatedData.role as 'USER' | 'ADMIN' | 'MANAGER',
           tenantId: validatedData.id,
           isFromTenantSync: true,
         },
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       )
     }

@@ -124,7 +124,7 @@ export function SmartAttendeesInput({
         }
         break
     }
-  }, [showUserList, filteredUsers, selectedIndex])
+  }, [showUserList, filteredUsers, selectedIndex, selectUser])
 
   // Select a user
   const selectUser = useCallback((user: User) => {

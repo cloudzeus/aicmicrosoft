@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
                   siteId: site.id,
                   siteUrl: site.webUrl,
                   displayName: site.displayName,
-                  accessLevel: 'read', // Default access level
+                  accessLevel: 'READ', // Default access level
                   isFromTenantSync: true,
                   tenantSiteId: site.id,
                   departmentId: defaultDepartment.id,

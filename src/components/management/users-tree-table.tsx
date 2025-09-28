@@ -104,8 +104,8 @@ export function UsersTreeTable({
       
       // Get departments from positions for search
       const positions = user.userPositions || []
-      const departments = positions.map((up: any) => up.position.department)
-      const uniqueDepartments = departments.filter((dept: any, index: number, self: any[]) => 
+      const departments = positions.map((up: { position: { department: { id: string; name: string; code: string } } }) => up.position.department)
+      const uniqueDepartments = departments.filter((dept: { id: string; name: string; code: string }, index: number, self: Array<{ id: string; name: string; code: string }>) => 
         index === self.findIndex(d => d.id === dept.id)
       )
       
@@ -126,8 +126,8 @@ export function UsersTreeTable({
     const treeNodes: TreeNode[] = filteredUsers.map(user => {
       // Derive departments from positions
       const positions = user.userPositions || []
-      const departments = positions.map((up: any) => up.position.department)
-      const uniqueDepartments = departments.filter((dept: any, index: number, self: any[]) => 
+      const departments = positions.map((up: { position: { department: { id: string; name: string; code: string } } }) => up.position.department)
+      const uniqueDepartments = departments.filter((dept: { id: string; name: string; code: string }, index: number, self: Array<{ id: string; name: string; code: string }>) => 
         index === self.findIndex(d => d.id === dept.id)
       )
       
@@ -159,7 +159,7 @@ export function UsersTreeTable({
     })
 
     return treeNodes.sort((a, b) => a.name.localeCompare(b.name))
-  }, [users, departments, expandedNodes, selectedNodes, searchQuery])
+  }, [users, selectedNodes, searchQuery])
 
   const handleToggleExpand = (id: string) => {
     setExpandedNodes(prev => {
@@ -241,7 +241,7 @@ export function UsersTreeTable({
 
         return (
           <div className="space-y-1">
-            {departments.slice(0, 2).map((dept: any) => (
+            {departments.slice(0, 2).map((dept: { id: string; name: string; code: string }) => (
               <div key={dept.id} className="flex items-center gap-1">
                 <Building className="w-3 h-3 text-blue-600" />
                 <span className="text-xs text-gray-700">
@@ -272,7 +272,7 @@ export function UsersTreeTable({
 
         return (
           <div className="space-y-1">
-            {positions.slice(0, 2).map((up: any) => (
+            {positions.slice(0, 2).map((up: { id: string; position: { name: string; department: { name: string } } }) => (
               <div key={up.id} className="flex items-center gap-1">
                 <Briefcase className="w-3 h-3 text-purple-600" />
                 <span className="text-xs text-gray-700">

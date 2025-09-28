@@ -10,12 +10,20 @@ import { RefreshCw, User, Database, Shield } from "lucide-react"
 
 interface DebugInfo {
   session: {
-    user: any
+    user: {
+      email?: string;
+      name?: string;
+    } | null
     role: string
     accessToken: boolean
   }
   database: {
-    user: any
+    user: {
+      email?: string;
+      name?: string;
+      role?: string;
+      tenantId?: string;
+    } | null
     found: boolean
   }
 }

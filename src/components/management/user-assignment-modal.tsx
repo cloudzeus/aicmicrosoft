@@ -92,7 +92,7 @@ export function UserAssignmentModal({
         setSelectedPosition(department.positions[0])
       }
     }
-  }, [assignedUsers, isOpen, positionId, department, allUsers])
+  }, [assignedUsers, isOpen, positionId, department, allUsers, positionName])
 
   const handleUserToggle = (user: User) => {
     setSelectedUsers(prev => {

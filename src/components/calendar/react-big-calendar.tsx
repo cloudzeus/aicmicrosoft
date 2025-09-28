@@ -5,7 +5,6 @@ import { Calendar, momentLocalizer, Views, View } from "react-big-calendar"
 import moment from "moment"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FaCalendarAlt, FaList, FaTable, FaClock } from "react-icons/fa"
 import "react-big-calendar/lib/css/react-big-calendar.css"
@@ -40,9 +39,8 @@ export function ReactBigCalendar({ events, onSelectEvent, onSelectSlot, loading 
   const [view, setView] = useState<View>(Views.MONTH)
   const [date, setDate] = useState(new Date())
 
-  const { defaultDate, scrollToTime } = useMemo(() => ({
+  const { defaultDate } = useMemo(() => ({
     defaultDate: new Date(),
-    scrollToTime: new Date(1970, 1, 1, 6),
   }), [])
 
   const eventStyleGetter = (event: CalendarEvent) => {

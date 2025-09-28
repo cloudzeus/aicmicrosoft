@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FolderOpen, Plus, Building, Database, ExternalLink, Edit, Trash2, Link as LinkIcon } from "lucide-react"
+import { FolderOpen, Plus, Building, Database, ExternalLink, Edit, Trash2 } from "lucide-react"
 import Link from "next/link"
 
 export default async function SharePointManagementPage() {
