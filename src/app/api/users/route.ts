@@ -8,60 +8,109 @@ export async function GET() {
   try {
     const session = await auth()
 
-    if (!session?.user || !session.accessToken) {
+    console.log("Session check:", {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      hasAccessToken: !!session?.accessToken,
+      userEmail: session?.user?.email
+    })
+
+    if (!session?.user) {
+      console.log("No session or user found")
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized - No session found" },
         { status: 401 }
       )
     }
 
-    console.log("Fetching users from tenant for:", session.user.email)
+    console.log("Fetching users for:", session.user.email)
 
-    // Get users from the same tenant using Microsoft Graph API
-    const response = await fetch('https://graph.microsoft.com/v1.0/users', {
-      headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    })
+    // Try to get users from Microsoft Graph API first
+    let graphUsers: any[] = []
+    if (session.accessToken) {
+      try {
+        const response = await fetch('https://graph.microsoft.com/v1.0/users', {
+          headers: {
+            'Authorization': `Bearer ${session.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
 
-    if (!response.ok) {
-      console.error('Graph API error:', response.status, response.statusText)
-      const errorText = await response.text()
-      console.error('Error details:', errorText)
-      return NextResponse.json(
-        { error: "Failed to fetch users from Microsoft Graph", details: errorText },
-        { status: response.status }
-      )
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Graph API response:', { totalUsers: data.value?.length || 0 })
+          graphUsers = data.value.map((user: { 
+            id: string; 
+            displayName: string; 
+            mail: string; 
+            userPrincipalName?: string;
+            jobTitle?: string;
+            department?: string;
+            officeLocation?: string;
+          }) => ({
+            id: user.id,
+            name: user.displayName,
+            email: user.mail,
+            displayName: user.displayName,
+            mail: user.mail,
+            userPrincipalName: user.userPrincipalName,
+            jobTitle: user.jobTitle,
+            department: user.department,
+            officeLocation: user.officeLocation,
+            role: 'USER' // Default role for Graph API users
+          }))
+          console.log(`Found ${graphUsers.length} users from Graph API`)
+        } else {
+          const errorText = await response.text()
+          console.error('Graph API error:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText
+          })
+        }
+      } catch (graphError) {
+        console.warn('Graph API failed, falling back to local users:', graphError)
+      }
     }
 
-    const data = await response.json()
-    
-    // Transform the users data to include only relevant fields
-    const users = data.value.map((user: { 
-      id: string; 
-      displayName: string; 
-      mail: string; 
-      userPrincipalName?: string;
-      jobTitle?: string;
-      department?: string;
-      officeLocation?: string;
-    }) => ({
+    // Fallback: Get users from local database
+    const { prisma } = await import('@/lib/prisma')
+    const localUsers = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        jobTitle: true,
+        role: true,
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    })
+
+    // Transform local users to match expected format
+    const transformedLocalUsers = localUsers.map(user => ({
       id: user.id,
-      displayName: user.displayName,
-      mail: user.mail,
-      userPrincipalName: user.userPrincipalName,
+      name: user.name,
+      email: user.email,
       jobTitle: user.jobTitle,
-      department: user.department,
-      officeLocation: user.officeLocation
+      role: user.role,
     }))
 
-    console.log(`Found ${users.length} users in tenant`)
+    console.log(`Found ${transformedLocalUsers.length} users from local database`)
+
+    // Combine and deduplicate users (Graph API users take precedence)
+    const allUsers = [...graphUsers, ...transformedLocalUsers]
+    const uniqueUsers = allUsers.filter((user, index, self) => 
+      index === self.findIndex(u => u.email === user.email)
+    )
+
+    console.log(`Total unique users: ${uniqueUsers.length}`)
 
     return NextResponse.json({
-      users: users,
-      total: users.length,
-      message: "Users fetched successfully from tenant"
+      users: uniqueUsers,
+      total: uniqueUsers.length,
+      message: "Users fetched successfully"
     })
 
   } catch (error) {

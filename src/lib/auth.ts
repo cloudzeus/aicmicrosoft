@@ -67,6 +67,67 @@ export const authConfig = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      console.log('SignIn callback:', {
+        userEmail: user?.email,
+        provider: account?.provider,
+        hasAccount: !!account,
+        hasProfile: !!profile
+      })
+      
+      if (account?.provider === "c03bef53-43af-4d5e-be22-da859317086c") {
+        try {
+          // Check if user exists in database and preserve their role
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+            select: { role: true }
+          })
+          
+          console.log('Existing user found:', existingUser)
+          
+          // If user exists with ADMIN role, preserve it
+          if (existingUser?.role === 'ADMIN') {
+            console.log(`Preserving ADMIN role for ${user.email}`)
+            return true
+          }
+        } catch (error) {
+          console.error('Error in signIn callback:', error)
+        }
+      }
+      return true
+    },
+    async jwt({ token, account, user, trigger }) {
+      // Initial sign in
+      if (account && user) {
+        // Store only essential token data to reduce JWT size
+        token.accessToken = account.access_token
+        token.refreshToken = account.refresh_token
+        token.expiresAt = account.expires_at
+        
+        // Get user role from database to preserve admin status
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+            select: { role: true }
+          })
+          token.role = dbUser?.role || UserRole.USER
+          console.log(`JWT: User ${user.email} has role ${token.role}`)
+        } catch (error) {
+          console.error('Error fetching user role:', error)
+          token.role = UserRole.USER
+        }
+        
+        return token
+      }
+
+      // Return previous token if the access token has not expired yet
+      if (token.expiresAt && Date.now() < (token.expiresAt as number) * 1000) {
+        return token
+      }
+
+      // Access token has expired, try to update it
+      return await refreshAccessToken(token)
+    },
     async session({ session, token }) {
       if (session.user && token) {
         session.user.id = token.sub!
@@ -75,29 +136,14 @@ export const authConfig = {
         if (token.error) {
           Object.assign(session, { error: token.error })
         }
+        console.log(`Session: User ${session.user.email} has role ${session.user.role}`)
       }
       return session
-    },
-    async jwt({ token, account }) {
-      // Initial sign in
-      if (account) {
-        token.accessToken = account.access_token
-        token.refreshToken = account.refresh_token
-        token.expiresAt = account.expires_at
-        return token
-      }
-
-      // Return previous token if the access token has not expired yet
-      if (Date.now() < (token.expiresAt as number) * 1000) {
-        return token
-      }
-
-      // Access token has expired, try to update it
-      return await refreshAccessToken(token)
     },
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/auth/signin",

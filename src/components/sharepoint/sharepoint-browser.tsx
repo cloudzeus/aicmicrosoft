@@ -16,7 +16,9 @@ import {
   FaBuilding,
   FaCalendarAlt,
   FaFileAlt,
-  FaFolderOpen
+  FaFolderOpen,
+  FaCloud,
+  FaDatabase
 } from "react-icons/fa"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
@@ -37,6 +39,7 @@ interface SharePointSite {
   }
   createdDateTime: string
   lastModifiedDateTime: string
+  isFromTenantSync?: boolean
 }
 
 interface SharePointDriveItem {
@@ -339,7 +342,31 @@ export function SharePointBrowser() {
                     <div className="flex items-center gap-3">
                       <FaBuilding className="w-4 h-4 text-blue-600" />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-[13px] text-gray-900 truncate">{site.displayName}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium text-[13px] text-gray-900 truncate">{site.displayName}</div>
+                          {site.isFromTenantSync !== undefined && (
+                            <Badge 
+                              variant={site.isFromTenantSync ? "default" : "secondary"}
+                              className={`text-[10px] px-1 py-0.5 ${
+                                site.isFromTenantSync 
+                                  ? 'bg-green-100 text-green-800 border-green-200' 
+                                  : 'bg-gray-100 text-gray-800 border-gray-200'
+                              }`}
+                            >
+                              {site.isFromTenantSync ? (
+                                <>
+                                  <FaCloud className="w-2 h-2 mr-1" />
+                                  Office 365
+                                </>
+                              ) : (
+                                <>
+                                  <FaDatabase className="w-2 h-2 mr-1" />
+                                  Local
+                                </>
+                              )}
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-[12px] text-gray-500 truncate">{site.webUrl}</div>
                         {site.description && (
                           <div className="text-[12px] text-gray-400 truncate">{site.description}</div>

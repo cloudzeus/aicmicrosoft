@@ -7,7 +7,8 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { FaUser, FaEnvelope, FaCalendarAlt, FaShieldAlt, FaBuilding, FaGlobe, FaUsers, FaShareAlt } from "react-icons/fa"
 import { NewTeamsMeeting } from "@/components/calendar/new-teams-meeting"
-import { SignOutButton } from "@/components/auth/sign-out-button"
+import { DashboardLayout } from "@/components/layout/dashboard-layout"
+import { DashboardOverview } from "@/components/dashboard/dashboard-overview"
 import { graphAPI } from "@/lib/microsoft-graph"
 
 export default async function DashboardPage() {
@@ -44,20 +45,15 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f6f8]">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-[24px] font-semibold text-[#1f2328]">Dashboard</h1>
-              <p className="text-[13px] text-[#61656a]">Welcome to your Microsoft 365 profile</p>
-            </div>
-            <SignOutButton />
-          </div>
-        </div>
+    <DashboardLayout 
+      pageTitle="Dashboard" 
+      pageDescription="Welcome to your Microsoft 365 profile"
+    >
+      {/* Dashboard Overview */}
+      <DashboardOverview />
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {/* User Profile and Details */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* User Profile Card */}
           <Card className="border border-[#e5e7eb] shadow-sm">
             <CardHeader className="pb-3">
@@ -264,8 +260,7 @@ export default async function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

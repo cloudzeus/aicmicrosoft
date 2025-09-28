@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { TenantUsersList } from "@/components/users/tenant-users-list"
-import { SignOutButton } from "@/components/auth/sign-out-button"
+import { DashboardLayout } from "@/components/layout/dashboard-layout"
 
 export default async function UsersPage() {
   const session = await auth()
@@ -11,22 +11,11 @@ export default async function UsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f6f8]">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-[24px] font-semibold text-[#1f2328]">TENANT USERS</h1>
-              <p className="text-[13px] text-[#61656a]">Manage and view all tenant users and domains</p>
-            </div>
-            <SignOutButton />
-          </div>
-        </div>
-
-        {/* Users List Component */}
-        <TenantUsersList />
-      </div>
-    </div>
+    <DashboardLayout 
+      pageTitle="Users" 
+      pageDescription="Manage and view all tenant users and domains"
+    >
+      <TenantUsersList />
+    </DashboardLayout>
   )
 }

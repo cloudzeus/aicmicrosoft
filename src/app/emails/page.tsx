@@ -2,12 +2,13 @@ import { Suspense } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { RefreshCw, ArrowLeft } from "lucide-react"
+import { RefreshCw } from "lucide-react"
 import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { graphAPI } from "@/lib/microsoft-graph"
 import { redirect } from "next/navigation"
 import { EmailList } from "./email-list"
+import { DashboardLayout } from "@/components/layout/dashboard-layout"
 
 interface EmailsPageProps {
   searchParams: Promise<{
@@ -107,30 +108,23 @@ export default async function EmailsPage({ searchParams }: EmailsPageProps) {
   const currentFolderId = folderId || inboxFolder?.id
 
   return (
-    <div className="min-h-screen bg-[#f5f6f8]">
-      <div className="mx-auto p-4 max-w-[1400px]">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to dashboard
-              </Link>
-            </Button>
-            <h1 className="text-[18px] font-semibold text-[#1f2328]">Mail</h1>
-          </div>
-          <div className="flex gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/emails?folder=${folder}&folderId=${currentFolderId}`}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Link>
-            </Button>
-          </div>
+    <DashboardLayout 
+      pageTitle="Email" 
+      pageDescription="Manage your Microsoft 365 email inbox"
+    >
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/emails?folder=${folder}&folderId=${currentFolderId}`}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Link>
+          </Button>
         </div>
+      </div>
 
-        {/* Outlook-like 3-pane layout */}
-        <div className="grid grid-cols-[240px_1fr] gap-3 h-[calc(100vh-120px)]">
+      {/* Outlook-like 3-pane layout */}
+      <div className="grid grid-cols-[240px_1fr] gap-3 h-[calc(100vh-200px)]">
           {/* Folders */}
           <Card className="border border-[#e5e7eb] shadow-sm overflow-auto">
             <CardHeader className="py-2">
@@ -174,8 +168,7 @@ export default async function EmailsPage({ searchParams }: EmailsPageProps) {
               currentFolderId={currentFolderId}
             />
           </Suspense>
-        </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

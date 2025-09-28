@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { FaSearch, FaRedo } from "react-icons/fa"
+import { Badge } from "@/components/ui/badge"
+import { FaSearch, FaRedo, FaCloud, FaDatabase } from "react-icons/fa"
 
 interface TenantUser {
   id: string
@@ -13,6 +14,7 @@ interface TenantUser {
   jobTitle?: string
   department?: string
   officeLocation?: string
+  isFromTenantSync?: boolean
 }
 
 interface TenantUsersClientProps {
@@ -143,10 +145,32 @@ export function TenantUsersClient({ users, onRefresh, refreshing = false }: Tena
                       </div>
                     )}
                   </div>
-                  <div className="mt-2">
+                  <div className="mt-2 flex items-center gap-2">
                     <div className="text-[10px] bg-[#f3f4f6] text-[#374151] border border-[#e5e7eb] px-2 py-1 rounded inline-block">
                       {getDomainFromEmail(user.mail || '')}
                     </div>
+                    {user.isFromTenantSync !== undefined && (
+                      <Badge 
+                        variant={user.isFromTenantSync ? "default" : "secondary"}
+                        className={`text-[10px] px-2 py-1 ${
+                          user.isFromTenantSync 
+                            ? 'bg-green-100 text-green-800 border-green-200' 
+                            : 'bg-gray-100 text-gray-800 border-gray-200'
+                        }`}
+                      >
+                        {user.isFromTenantSync ? (
+                          <>
+                            <FaCloud className="w-2 h-2 mr-1" />
+                            Office 365
+                          </>
+                        ) : (
+                          <>
+                            <FaDatabase className="w-2 h-2 mr-1" />
+                            Local
+                          </>
+                        )}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
