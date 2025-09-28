@@ -53,6 +53,7 @@ model User {
   aadObjectId      String?   @unique
   tenantId         String?
   jobTitle         String?
+  officeLocation   String?
   departmentExport Json?     // Raw data from Graph
   isFromTenantSync Boolean   @default(false)  // Track if synced from Microsoft Graph
   createdAt        DateTime  @default(now())
@@ -64,6 +65,8 @@ model User {
   managedDepartments Department[] @relation("DepartmentManager")
   userDepartments UserDepartment[]
   userPositions   UserPosition[]
+  assignedTodos   Todo[] @relation("AssignedTodos")
+  createdTodos    Todo[] @relation("CreatedTodos")
 
   @@index([isFromTenantSync])
 }
@@ -245,4 +248,31 @@ enum GroupType {
   DISTRIBUTION
   UNIFIED
   MICROSOFT365
+}
+
+model Todo {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  completed   Boolean  @default(false)
+  priority    Priority @default(MEDIUM)
+  dueDate     DateTime?
+  assignedTo  String
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignedUser User @relation("AssignedTodos", fields: [assignedTo], references: [id], onDelete: Cascade)
+  creator      User @relation("CreatedTodos", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([assignedTo])
+  @@index([createdBy])
+  @@index([completed])
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }

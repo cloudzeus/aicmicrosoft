@@ -375,7 +375,7 @@ export class MicrosoftGraphAPI {
     }
   }
 
-  async getMyGroups(): Promise<Array<{ id: string; displayName: string; mail?: string; mailEnabled?: boolean; groupTypes?: string[] }>> {
+  async getMyGroups(): Promise<Array<{ id: string; displayName: string; mail?: string; mailEnabled?: boolean; groupTypes?: string[]; securityEnabled?: boolean; description?: string }>> {
     const session = await auth()
     if (!session?.user || !session.accessToken) {
       throw new Error('No authenticated session or access token found')
@@ -1056,6 +1056,102 @@ export class MicrosoftGraphAPI {
         hasAttachments: false
       }
     ]
+  }
+
+  // Microsoft To Do methods
+  async getToDoLists(): Promise<any[]> {
+    const accessToken = await this.getAccessTokenFromSession()
+    const res = await fetch(`${this.baseUrl}/me/todo/lists`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      }
+    })
+    if (!res.ok) {
+      const t = await res.text()
+      console.error('Graph getToDoLists failed:', t)
+      throw new Error(`Failed to get To Do lists: ${t}`)
+    }
+    const data = await res.json()
+    return data.value || []
+  }
+
+  async getToDoTasks(listId: string = 'default', filter: string = ''): Promise<any[]> {
+    try {
+      const accessToken = await this.getAccessTokenFromSession()
+      let url = `${this.baseUrl}/me/todo/lists/${listId}/tasks`
+      if (filter) {
+        url += `?$filter=${encodeURIComponent(filter)}`
+      }
+      
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        }
+      })
+      if (!res.ok) {
+        const t = await res.text()
+        console.error('Graph getToDoTasks failed:', t)
+        throw new Error(`Failed to get To Do tasks: ${t}`)
+      }
+      const data = await res.json()
+      return data.value || []
+    } catch (error) {
+      console.error('Error fetching To Do tasks:', error)
+      // Return empty array instead of throwing to prevent dashboard from breaking
+      return []
+    }
+  }
+
+  async getToDoTask(listId: string, taskId: string): Promise<any> {
+    const accessToken = await this.getAccessTokenFromSession()
+    const res = await fetch(`${this.baseUrl}/me/todo/lists/${listId}/tasks/${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      }
+    })
+    if (!res.ok) {
+      const t = await res.text()
+      console.error('Graph getToDoTask failed:', t)
+      throw new Error(`Failed to get To Do task: ${t}`)
+    }
+    return await res.json()
+  }
+
+  async updateToDoTask(listId: string, taskId: string, updateData: any): Promise<any> {
+    const accessToken = await this.getAccessTokenFromSession()
+    const res = await fetch(`${this.baseUrl}/me/todo/lists/${listId}/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updateData)
+    })
+    if (!res.ok) {
+      const t = await res.text()
+      console.error('Graph updateToDoTask failed:', t)
+      throw new Error(`Failed to update To Do task: ${t}`)
+    }
+    return await res.json()
+  }
+
+  async deleteToDoTask(listId: string, taskId: string): Promise<void> {
+    const accessToken = await this.getAccessTokenFromSession()
+    const res = await fetch(`${this.baseUrl}/me/todo/lists/${listId}/tasks/${taskId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      }
+    })
+    if (!res.ok) {
+      const t = await res.text()
+      console.error('Graph deleteToDoTask failed:', t)
+      throw new Error(`Failed to delete To Do task: ${t}`)
+    }
   }
 }
 

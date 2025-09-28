@@ -9,6 +9,7 @@ import { FaUser, FaEnvelope, FaCalendarAlt, FaShieldAlt, FaBuilding, FaGlobe, Fa
 import { NewTeamsMeeting } from "@/components/calendar/new-teams-meeting"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview"
+import { TodosList } from "@/components/dashboard/todos-list"
 import { graphAPI } from "@/lib/microsoft-graph"
 
 export default async function DashboardPage() {
@@ -36,13 +37,16 @@ export default async function DashboardPage() {
   let myGroups: Array<{ id: string; displayName: string; mail?: string; mailEnabled?: boolean; groupTypes?: string[] }> = []
   let sharedMailboxes: Array<{ id: string; displayName: string; mail?: string }> = []
   let profileImageDataUrl: string | null = null
+  let microsoftTodos: any[] = []
   try {
     myGroups = await graphAPI.getMyGroups()
     sharedMailboxes = await graphAPI.getSharedMailboxesIAmMember()
     profileImageDataUrl = await graphAPI.getMyProfilePhotoBase64()
-    } catch {
+    microsoftTodos = await graphAPI.getToDoTasks()
+  } catch {
     // ignore errors to keep dashboard rendering
   }
+
 
   return (
     <DashboardLayout 
@@ -54,6 +58,8 @@ export default async function DashboardPage() {
 
       {/* User Profile and Details */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Todos List */}
+        <TodosList userId={user.id} initialTodos={microsoftTodos} />
           {/* User Profile Card */}
           <Card className="border border-[#e5e7eb] shadow-sm">
             <CardHeader className="pb-3">

@@ -57,7 +57,16 @@ export function UserEditModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user) return
+    
+    // Validate required fields
+    if (!formData.name || !formData.email) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+    
+    if (!user) {
+      return
+    }
 
     setIsLoading(true)
     try {
@@ -134,7 +143,6 @@ export function UserEditModal({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g., John Doe"
-              required
               disabled={isLoading}
             />
           </div>
@@ -147,7 +155,6 @@ export function UserEditModal({
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="e.g., john.doe@company.com"
-              required
               disabled={isLoading || user?.isFromTenantSync}
             />
             {user?.isFromTenantSync && (

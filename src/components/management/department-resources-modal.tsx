@@ -57,6 +57,7 @@ export function DepartmentResourcesModal({
   const [isLoadingResources, setIsLoadingResources] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const [resourcesError, setResourcesError] = useState<string | null>(null)
   const [selectedResources, setSelectedResources] = useState<AvailableResource[]>([])
   const [isResourceComboOpen, setIsResourceComboOpen] = useState(false)
   const [newResource, setNewResource] = useState({
@@ -73,6 +74,7 @@ export function DepartmentResourcesModal({
 
   const fetchAvailableResources = async () => {
     setIsLoadingResources(true)
+    setResourcesError(null)
     try {
       let endpoint = ''
       switch (resourceType) {
@@ -94,15 +96,29 @@ export function DepartmentResourcesModal({
                            resourceType === 'mailbox' ? 'mailboxes' : 'groups'
         console.log(`${resourceType} resources fetched:`, data[resourceKey]?.length || 0, 'resources')
         setAvailableResources(data[resourceKey] || [])
+        setResourcesError(null)
       } else {
-        const errorData = await response.json()
-        console.error(`Failed to fetch ${resourceType} resources:`, errorData)
-        toast.error(`Failed to fetch ${resourceType} resources from your tenant`)
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`
+        try {
+          const errorData = await response.json()
+          if (errorData && Object.keys(errorData).length > 0) {
+            errorMessage = errorData.error || errorData.message || JSON.stringify(errorData)
+          }
+        } catch {
+          // Keep the default HTTP error message
+        }
+        
+        // Only log meaningful errors, not empty objects
+        if (errorMessage !== `HTTP ${response.status}: ${response.statusText}`) {
+          console.error(`Failed to fetch ${resourceType} resources:`, errorMessage)
+        }
+        
+        setResourcesError(`Failed to fetch ${resourceType} resources. Please check your Microsoft 365 connection.`)
         setAvailableResources([])
       }
     } catch (error) {
       console.error(`Error fetching ${resourceType} resources:`, error)
-      toast.error(`Failed to fetch ${resourceType} resources from your tenant`)
+      setResourcesError(`Failed to fetch ${resourceType} resources from your tenant`)
       setAvailableResources([])
     } finally {
       setIsLoadingResources(false)
@@ -153,7 +169,11 @@ export function DepartmentResourcesModal({
           }
         }
 
-        const endpoint = `/api/departments/${departmentId}/${resourceType}s`
+        const endpoint = resourceType === 'mailbox' 
+          ? `/api/departments/${departmentId}/mailboxes`
+          : resourceType === 'group'
+          ? `/api/departments/${departmentId}/groups`
+          : `/api/departments/${departmentId}/sharepoints`
         return fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -182,7 +202,13 @@ export function DepartmentResourcesModal({
   const handleDeleteResource = async (resourceId: string) => {
     setIsDeleting(resourceId)
     try {
-      const response = await fetch(`/api/departments/${departmentId}/${resourceType}s/${resourceId}`, {
+      const endpoint = resourceType === 'mailbox' 
+        ? `/api/departments/${departmentId}/mailboxes/${resourceId}`
+        : resourceType === 'group'
+        ? `/api/departments/${departmentId}/groups/${resourceId}`
+        : `/api/departments/${departmentId}/sharepoints/${resourceId}`
+      
+      const response = await fetch(endpoint, {
         method: 'DELETE'
       })
 
@@ -342,6 +368,16 @@ export function DepartmentResourcesModal({
                         <div className="flex items-center justify-center p-4">
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
                           Loading {getResourceTitle().toLowerCase()}...
+                        </div>
+                      ) : resourcesError ? (
+                        <div className="flex flex-col items-center justify-center p-4 text-center">
+                          <div className="text-sm text-red-600 mb-2">{resourcesError}</div>
+                          <button 
+                            onClick={fetchAvailableResources}
+                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                          >
+                            Try again
+                          </button>
                         </div>
                       ) : (
                         `No ${getResourceTitle().toLowerCase()} found.`

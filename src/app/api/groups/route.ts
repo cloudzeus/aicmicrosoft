@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const session = await auth()
 
-    if (!session?.user || !session.accessToken) {
+    if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -17,46 +17,67 @@ export async function GET() {
 
     console.log("Fetching groups for:", session.user.email)
 
-    // For now, we'll return a mock list of groups
-    // In a real implementation, you would fetch from Microsoft Graph
-    const groups = [
-      {
-        id: "group-1",
-        displayName: "IT Department Group",
-        emailAddress: "it-group@company.com",
-        description: "IT Department security group",
-        groupType: "SECURITY"
-      },
-      {
-        id: "group-2",
-        displayName: "HR Department Group", 
-        emailAddress: "hr-group@company.com",
-        description: "HR Department security group",
-        groupType: "SECURITY"
-      },
-      {
-        id: "group-3",
-        displayName: "Finance Department Group",
-        emailAddress: "finance-group@company.com", 
-        description: "Finance Department security group",
-        groupType: "SECURITY"
-      },
-      {
-        id: "group-4",
-        displayName: "All Employees Distribution",
-        emailAddress: "all-employees@company.com",
-        description: "Distribution list for all employees",
-        groupType: "DISTRIBUTION"
-      }
-    ]
+    try {
+      // Fetch real groups from Microsoft Graph
+      const groups = await graphAPI.getMyGroups()
+      
+      // Filter and format groups
+      const formattedGroups = groups.map(group => ({
+        id: group.id,
+        displayName: group.displayName,
+        emailAddress: group.mail || group.displayName,
+        description: group.description || `Group: ${group.displayName}`,
+        groupType: group.securityEnabled ? "SECURITY" : "DISTRIBUTION"
+      }))
 
-    console.log(`Found ${groups.length} groups`)
+      console.log(`Found ${formattedGroups.length} groups`)
 
-    return NextResponse.json({
-      groups: groups,
-      total: groups.length,
-      message: "Groups fetched successfully"
-    })
+      return NextResponse.json({
+        groups: formattedGroups,
+        total: formattedGroups.length,
+        message: "Groups fetched successfully"
+      })
+    } catch (error) {
+      console.error("Error fetching real groups, falling back to sample data:", error)
+      
+      // Fallback to sample data if Microsoft Graph fails
+      const groups = [
+        {
+          id: "group-1",
+          displayName: "IT Department Group",
+          emailAddress: "it-group@company.com",
+          description: "IT Department security group",
+          groupType: "SECURITY"
+        },
+        {
+          id: "group-2",
+          displayName: "HR Department Group", 
+          emailAddress: "hr-group@company.com",
+          description: "HR Department security group",
+          groupType: "SECURITY"
+        },
+        {
+          id: "group-3",
+          displayName: "Finance Department Group",
+          emailAddress: "finance-group@company.com", 
+          description: "Finance Department security group",
+          groupType: "SECURITY"
+        },
+        {
+          id: "group-4",
+          displayName: "All Employees Distribution",
+          emailAddress: "all-employees@company.com",
+          description: "Distribution list for all employees",
+          groupType: "DISTRIBUTION"
+        }
+      ]
+
+      return NextResponse.json({
+        groups: groups,
+        total: groups.length,
+        message: "Using sample data - Microsoft Graph unavailable"
+      })
+    }
 
   } catch (error) {
     console.error("Error fetching groups:", error)
