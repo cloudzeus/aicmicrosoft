@@ -1,14 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
-import { Trash2, Forward, FolderPlus, Reply } from "lucide-react"
+import { Trash2, Forward, FolderPlus, Reply, ReplyAll, Mail, Paperclip, Clock } from "lucide-react"
 import { format } from "date-fns"
 import { deleteEmailAction, forwardEmailAction, replyEmailAction } from "./actions"
 import { Email } from "./types"
 import { usePathname } from "next/navigation"
+import { EmailModal } from "@/components/emails/email-modal"
+import { EmailComposeModal } from "@/components/emails/email-compose-modal"
 
 interface EmailListProps {
   emails: Email[]
@@ -18,10 +20,35 @@ interface EmailListProps {
   currentFolderId?: string
 }
 
+interface User {
+  id: string
+  name: string | null
+  email: string
+}
+
 export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFolderId }: EmailListProps) {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null)
   const [showEmailModal, setShowEmailModal] = useState(false)
+  const [showComposeModal, setShowComposeModal] = useState(false)
+  const [composeMode, setComposeMode] = useState<'reply' | 'replyAll' | 'forward'>('reply')
+  const [users, setUsers] = useState<User[]>([])
   const pathname = usePathname()
+
+  // Fetch users for multiselect
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('/api/users')
+        if (response.ok) {
+          const data = await response.json()
+          setUsers(data.users || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch users:', error)
+      }
+    }
+    fetchUsers()
+  }, [])
 
   const handleDeleteEmail = async (email: Email) => {
     try {
@@ -36,31 +63,47 @@ export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFol
     }
   }
 
-  const handleForwardEmail = async (email: Email) => {
-    try {
-      // TODO: Get forward recipients from user input
-      const result = await forwardEmailAction(email.messageId, [], '', pathname)
-      if (result.success) {
-        console.log("Email forwarded successfully")
-      } else {
-        alert(result.error)
-      }
-    } catch (error) {
-      console.error('Failed to forward email:', error)
-    }
+  const handleForwardEmail = (email: Email) => {
+    setSelectedEmail(email)
+    setComposeMode('forward')
+    setShowComposeModal(true)
   }
 
-  const handleReplyEmail = async (email: Email) => {
+  const handleReplyEmail = (email: Email) => {
+    setSelectedEmail(email)
+    setComposeMode('reply')
+    setShowComposeModal(true)
+  }
+
+  const handleReplyAllEmail = (email: Email) => {
+    setSelectedEmail(email)
+    setComposeMode('replyAll')
+    setShowComposeModal(true)
+  }
+
+  const handleSendEmail = async (data: { recipients: string[], subject: string, body: string }) => {
+    if (!selectedEmail) return
+
     try {
-      // TODO: Get reply comment from user input
-      const result = await replyEmailAction(email.messageId, '', pathname)
+      let result
+      if (composeMode === 'reply') {
+        result = await replyEmailAction(selectedEmail.messageId, data.body, pathname)
+      } else if (composeMode === 'replyAll') {
+        result = await replyEmailAction(selectedEmail.messageId, data.body, pathname)
+      } else {
+        result = await forwardEmailAction(selectedEmail.messageId, data.recipients, data.body, pathname)
+      }
+      
       if (result.success) {
-        console.log("Email replied successfully")
+        console.log(`Email ${composeMode}ed successfully`)
+        setShowComposeModal(false)
+        setSelectedEmail(null)
       } else {
         alert(result.error)
       }
     } catch (error) {
-      console.error('Failed to reply to email:', error)
+      console.error(`Failed to ${composeMode} email:`, error)
+      alert(`Failed to ${composeMode} email`)
     }
   }
 
@@ -123,20 +166,36 @@ export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFol
                     onClick={() => handleViewEmail(email)}
                     className={`px-3 py-2 cursor-pointer border-b border-[#f0f0f0] hover:bg-[#f9fafb] ${!email.isRead ? 'bg-[#eef2ff] font-semibold' : 'bg-white'}`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="text-[12px] font-medium text-[#111827] truncate max-w-[260px]">{email.sender}</div>
-                      <div className="text-[11px] text-[#6b7280]">{formatDate(email.receivedAt)}</div>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-gray-900 truncate max-w-[240px]">{email.sender}</span>
+                        {email.isImportant && (
+                          <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {email.hasAttachments && (
+                          <Paperclip className="h-3 w-3 text-blue-600" />
+                        )}
+                        <Clock className="h-3 w-3 text-gray-500" />
+                        <span className="text-xs text-gray-500">{formatDate(email.receivedAt)}</span>
+                      </div>
                     </div>
-                    <div className="text-[13px] text-[#111827] truncate">{email.subject}</div>
-                    <div className="text-[12px] text-[#6b7280] line-clamp-2 break-words">
+                    <div className="text-xs text-gray-900 truncate font-medium mb-1">{email.subject}</div>
+                    <div className="text-xs text-gray-500 line-clamp-2 break-words">
                       {truncateText(stripHtml(email.htmlBody || email.body || ''))}
                     </div>
                   </div>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
-                  <ContextMenuItem onClick={() => handleDeleteEmail(email)}>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
+                  <ContextMenuItem onClick={() => handleReplyEmail(email)}>
+                    <Reply className="h-4 w-4 mr-2" />
+                    Reply
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => handleReplyAllEmail(email)}>
+                    <ReplyAll className="h-4 w-4 mr-2" />
+                    Reply to All
                   </ContextMenuItem>
                   <ContextMenuItem onClick={() => handleForwardEmail(email)}>
                     <Forward className="h-4 w-4 mr-2" />
@@ -146,9 +205,9 @@ export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFol
                     <FolderPlus className="h-4 w-4 mr-2" />
                     Save to folder
                   </ContextMenuItem>
-                  <ContextMenuItem onClick={() => handleAssociateEmail(email)}>
-                    <Reply className="h-4 w-4 mr-2" />
-                    Associate
+                  <ContextMenuItem onClick={() => handleDeleteEmail(email)}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
                   </ContextMenuItem>
                 </ContextMenuContent>
               </ContextMenu>
@@ -165,6 +224,34 @@ export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFol
           </div>
         </CardContent>
       </Card>
+
+      {/* Email Modal */}
+      <EmailModal
+        email={selectedEmail}
+        isOpen={showEmailModal}
+        onClose={() => {
+          setShowEmailModal(false)
+          setSelectedEmail(null)
+        }}
+        onReply={handleReplyEmail}
+        onReplyAll={handleReplyAllEmail}
+        onForward={handleForwardEmail}
+        onDelete={handleDeleteEmail}
+        onSaveToFolder={handleSaveToFolder}
+      />
+
+      {/* Compose Modal */}
+      <EmailComposeModal
+        isOpen={showComposeModal}
+        onClose={() => {
+          setShowComposeModal(false)
+          setSelectedEmail(null)
+        }}
+        onSend={handleSendEmail}
+        originalEmail={selectedEmail}
+        mode={composeMode}
+        users={users}
+      />
     </>
   )
 }

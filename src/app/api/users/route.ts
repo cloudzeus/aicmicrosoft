@@ -4,8 +4,17 @@ import { auth } from "@/lib/auth"
 // Force Node.js runtime for Prisma compatibility
 export const runtime = 'nodejs'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const includeAssignments = searchParams.get('includeAssignments') === 'true'
+    
+    console.log('Users API - parameters:', {
+      includeAssignments,
+      url: request.url,
+      searchParams: Object.fromEntries(searchParams.entries())
+    })
+    
     const session = await auth()
 
     console.log("Session check:", {
@@ -57,7 +66,13 @@ export async function GET() {
             jobTitle: user.jobTitle,
             department: user.department,
             officeLocation: user.officeLocation,
-            role: 'USER' // Default role for Graph API users
+            role: 'USER', // Default role for Graph API users
+            tenantId: user.id,
+            isFromTenantSync: true,
+            // Graph API users don't have local assignments, so always return empty arrays
+            userDepartments: [],
+            userPositions: [],
+            _count: { userDepartments: 0, userPositions: 0 }
           }))
           console.log(`Found ${graphUsers.length} users from Graph API`)
         } else {
@@ -76,12 +91,43 @@ export async function GET() {
     // Fallback: Get users from local database
     const { prisma } = await import('@/lib/prisma')
     const localUsers = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        jobTitle: true,
-        role: true,
+      include: {
+        userDepartments: includeAssignments ? {
+          include: {
+            department: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                description: true
+              }
+            }
+          }
+        } : false,
+        userPositions: includeAssignments ? {
+          include: {
+            position: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                department: {
+                  select: {
+                    id: true,
+                    name: true,
+                    code: true
+                  }
+                }
+              }
+            }
+          }
+        } : false,
+        _count: includeAssignments ? {
+          select: {
+            userDepartments: true,
+            userPositions: true
+          }
+        } : false
       },
       orderBy: {
         name: 'asc'
@@ -89,13 +135,38 @@ export async function GET() {
     })
 
     // Transform local users to match expected format
-    const transformedLocalUsers = localUsers.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      jobTitle: user.jobTitle,
-      role: user.role,
-    }))
+    const transformedLocalUsers = localUsers.map(user => {
+      const transformed = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        jobTitle: user.jobTitle,
+        role: user.role,
+        tenantId: user.tenantId,
+        isFromTenantSync: user.isFromTenantSync,
+        ...(includeAssignments && {
+          userDepartments: user.userDepartments || [],
+          userPositions: user.userPositions || [],
+          _count: user._count || { userDepartments: 0, userPositions: 0 }
+        })
+      }
+      
+      if (includeAssignments) {
+        console.log('Transforming user with assignments:', {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          hasUserDepartments: !!user.userDepartments,
+          userDepartmentsCount: user.userDepartments?.length || 0,
+          hasUserPositions: !!user.userPositions,
+          userPositionsCount: user.userPositions?.length || 0,
+          hasCount: !!user._count,
+          countData: user._count
+        })
+      }
+      
+      return transformed
+    })
 
     console.log(`Found ${transformedLocalUsers.length} users from local database`)
 
@@ -106,6 +177,25 @@ export async function GET() {
     )
 
     console.log(`Total unique users: ${uniqueUsers.length}`)
+    
+    // Debug: Log sample user data when includeAssignments is true
+    if (includeAssignments && uniqueUsers.length > 0) {
+      console.log('Sample user with assignments:', {
+        id: uniqueUsers[0].id,
+        name: uniqueUsers[0].name,
+        email: uniqueUsers[0].email,
+        tenantId: uniqueUsers[0].tenantId,
+        isFromTenantSync: uniqueUsers[0].isFromTenantSync,
+        hasUserDepartments: !!uniqueUsers[0].userDepartments,
+        userDepartmentsCount: uniqueUsers[0].userDepartments?.length || 0,
+        hasUserPositions: !!uniqueUsers[0].userPositions,
+        userPositionsCount: uniqueUsers[0].userPositions?.length || 0,
+        hasCount: !!uniqueUsers[0]._count,
+        countData: uniqueUsers[0]._count,
+        sampleDepartment: uniqueUsers[0].userDepartments?.[0],
+        samplePosition: uniqueUsers[0].userPositions?.[0]
+      })
+    }
 
     return NextResponse.json({
       users: uniqueUsers,

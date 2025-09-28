@@ -113,6 +113,78 @@ export interface SharePointDriveItem {
 export class MicrosoftGraphAPI {
   private baseUrl = 'https://graph.microsoft.com/v1.0'
   
+  // Helper method to refresh access token
+  private async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; expiresIn: number }> {
+    const url = `https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`
+    
+    const response = await fetch(url, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: process.env.AUTH_MICROSOFT_ENTRA_ID_ID!,
+        client_secret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET!,
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      }),
+      method: "POST",
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Token refresh failed: ${response.status} ${response.statusText} - ${error}`)
+    }
+
+    const refreshedTokens = await response.json()
+    return {
+      accessToken: refreshedTokens.access_token,
+      expiresIn: refreshedTokens.expires_in
+    }
+  }
+
+  // Helper method to get valid access token with automatic refresh
+  private async getValidAccessToken(userId: string): Promise<string> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { accounts: true }
+    })
+    
+    if (!user) throw new Error('User not found')
+    
+    const microsoftAccount = user.accounts.find(a => a.provider === "c03bef53-43af-4d5e-be22-da859317086c")
+    if (!microsoftAccount?.access_token) throw new Error('No Microsoft access token')
+    
+    // Check if token is expired (with 5 minute buffer)
+    const now = Math.floor(Date.now() / 1000)
+    const expiresAt = microsoftAccount.expires_at ? Math.floor(microsoftAccount.expires_at.getTime() / 1000) : 0
+    
+    if (expiresAt - now < 300) { // 5 minutes buffer
+      if (!microsoftAccount.refresh_token) {
+        throw new Error('No refresh token available')
+      }
+      
+      try {
+        const refreshedTokens = await this.refreshAccessToken(microsoftAccount.refresh_token)
+        
+        // Update the database with new tokens
+        await prisma.account.update({
+          where: { id: microsoftAccount.id },
+          data: {
+            access_token: refreshedTokens.accessToken,
+            expires_at: new Date(Date.now() + refreshedTokens.expiresIn * 1000)
+          }
+        })
+        
+        return refreshedTokens.accessToken
+      } catch (error) {
+        console.error('Failed to refresh token:', error)
+        throw new Error('Failed to refresh access token')
+      }
+    }
+    
+    return microsoftAccount.access_token
+  }
+  
   async getFreeBusy(
     schedules: string[],
     start: string,
@@ -631,16 +703,13 @@ export class MicrosoftGraphAPI {
         throw new Error('User not found')
       }
 
-      const microsoftAccount = user.accounts.find(account => account.provider === "c03bef53-43af-4d5e-be22-da859317086c")
-      
-      if (!microsoftAccount?.access_token) {
-        throw new Error('No Microsoft account or access token found')
-      }
+      // Get valid access token with automatic refresh
+      const accessToken = await this.getValidAccessToken(user.id)
 
       const response = await fetch(`${this.baseUrl}/me/messages/${messageId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${microsoftAccount.access_token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         }
       })
@@ -660,21 +729,25 @@ export class MicrosoftGraphAPI {
     if (!session?.user) {
       throw new Error('No authenticated session found')
     }
+    
     const user = await prisma.user.findUnique({
       where: { email: session.user.email! },
       include: { accounts: true }
     })
     if (!user) throw new Error('User not found')
-    const microsoftAccount = user.accounts.find(a => a.provider === "c03bef53-43af-4d5e-be22-da859317086c")
-    if (!microsoftAccount?.access_token) throw new Error('No Microsoft access token')
+    
+    // Get valid access token with automatic refresh
+    const accessToken = await this.getValidAccessToken(user.id)
+    
     const res = await fetch(`${this.baseUrl}/me/messages/${messageId}/reply`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${microsoftAccount.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ comment })
     })
+    
     if (!res.ok) {
       const t = await res.text()
       throw new Error(`Reply failed: ${res.status} ${res.statusText} - ${t}`)
@@ -686,17 +759,20 @@ export class MicrosoftGraphAPI {
     if (!session?.user) {
       throw new Error('No authenticated session found')
     }
+    
     const user = await prisma.user.findUnique({
       where: { email: session.user.email! },
       include: { accounts: true }
     })
     if (!user) throw new Error('User not found')
-    const microsoftAccount = user.accounts.find(a => a.provider === "c03bef53-43af-4d5e-be22-da859317086c")
-    if (!microsoftAccount?.access_token) throw new Error('No Microsoft access token')
+    
+    // Get valid access token with automatic refresh
+    const accessToken = await this.getValidAccessToken(user.id)
+    
     const res = await fetch(`${this.baseUrl}/me/messages/${messageId}/forward`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${microsoftAccount.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -704,6 +780,7 @@ export class MicrosoftGraphAPI {
         toRecipients: to.map(address => ({ emailAddress: { address } }))
       })
     })
+    
     if (!res.ok) {
       const t = await res.text()
       throw new Error(`Forward failed: ${res.status} ${res.statusText} - ${t}`)

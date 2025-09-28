@@ -113,13 +113,16 @@ export default async function EmailsPage({ searchParams }: EmailsPageProps) {
       pageDescription="Manage your Microsoft 365 email inbox"
     >
       <div className="flex items-center justify-between mb-6">
-        <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/emails?folder=${folder}&folderId=${currentFolderId}`}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Link>
-          </Button>
+        <div className="flex items-center gap-3">
+          <h1 className="text-sm font-semibold text-gray-900">Email Management</h1>
+          <div className="flex gap-2">
+            <Button asChild variant="outline" size="sm" className="text-xs h-7">
+              <Link href={`/emails?folder=${folder}&folderId=${currentFolderId}`}>
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Refresh
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -127,22 +130,26 @@ export default async function EmailsPage({ searchParams }: EmailsPageProps) {
       <div className="grid grid-cols-[240px_1fr] gap-3 h-[calc(100vh-200px)]">
           {/* Folders */}
           <Card className="border border-[#e5e7eb] shadow-sm overflow-auto">
-            <CardHeader className="py-2">
-              <CardTitle className="text-[12px] text-[#6b7280]">Folders</CardTitle>
+            <CardHeader className="py-3">
+              <CardTitle className="text-xs font-medium text-gray-900">Folders</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="flex flex-col text-[13px]">
+              <div className="flex flex-col">
                 {folders.sort((a,b) => (a.displayName.toLowerCase()==='inbox'? -1 : b.displayName.toLowerCase()==='inbox'? 1 : a.displayName.localeCompare(b.displayName)))
                   .map((f) => (
                   <Button
                     key={f.id}
                     asChild
                     variant={folder === f.displayName.toLowerCase() ? "secondary" : "ghost"}
-                    className="justify-between px-3 py-2 h-auto"
+                    className="justify-between px-3 py-2 h-auto text-xs hover:bg-gray-50"
                   >
                     <Link href={`/emails?folder=${f.displayName.toLowerCase()}&folderId=${f.id}`}>
-                      <span>{f.displayName}</span>
-                      <span className="text-[12px] text-[#6b7280]">{f.unreadItemCount}</span>
+                      <span className="font-medium">{f.displayName}</span>
+                      {f.unreadItemCount > 0 && (
+                        <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">
+                          {f.unreadItemCount}
+                        </span>
+                      )}
                     </Link>
                   </Button>
                 ))}

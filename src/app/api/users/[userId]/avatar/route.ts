@@ -28,18 +28,12 @@ export async function GET(
       )
     }
 
-    // Get access token from JWT token
-    const token = await getToken({ 
-      req: request,
-      secret: process.env.AUTH_SECRET 
-    })
-    
-    const accessToken = token?.accessToken as string || session?.accessToken as string
+    // Use session access token directly
+    const accessToken = session.accessToken
 
     console.log('Avatar API - token check:', {
-      hasToken: !!token,
       hasAccessToken: !!accessToken,
-      tokenKeys: token ? Object.keys(token) : []
+      sessionRole: session.user?.role
     })
 
     if (!accessToken) {
@@ -51,21 +45,37 @@ export async function GET(
     }
 
     // Fetch user avatar from Microsoft Graph API
-    const response = await fetch(`https://graph.microsoft.com/v1.0/users/${userId}/photo/$value`, {
+    const graphUrl = `https://graph.microsoft.com/v1.0/users/${userId}/photo/$value`
+    console.log('Avatar API - fetching from Graph:', { graphUrl, userId })
+    
+    const response = await fetch(graphUrl, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     })
+    
+    console.log('Avatar API - Graph response:', { 
+      status: response.status, 
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
+    })
 
     if (!response.ok) {
       // If no photo exists, return 404
       if (response.status === 404) {
+        console.log('Avatar API - no photo found for user:', userId)
         return NextResponse.json(
           { error: 'No photo found' },
           { status: 404 }
         )
       }
+      
+      console.log('Avatar API - Graph API error:', { 
+        status: response.status, 
+        statusText: response.statusText,
+        userId 
+      })
       
       return NextResponse.json(
         { error: 'Failed to fetch photo' },

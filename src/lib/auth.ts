@@ -120,6 +120,30 @@ export const authConfig = {
         return token
       }
 
+      // Always check database role on every JWT call to ensure it's up to date
+      if (token.email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email as string },
+            select: { role: true }
+          })
+          
+          console.log(`JWT: Checking role for ${token.email}:`, {
+            currentTokenRole: token.role,
+            databaseRole: dbUser?.role,
+            userFound: !!dbUser
+          })
+          
+          // Update token role if database role is different
+          if (dbUser && token.role !== dbUser.role) {
+            console.log(`JWT: Updating role from ${token.role} to ${dbUser.role} for ${token.email}`)
+            token.role = dbUser.role
+          }
+        } catch (error) {
+          console.error('Error checking user role in JWT:', error)
+        }
+      }
+
       // Return previous token if the access token has not expired yet
       if (token.expiresAt && Date.now() < (token.expiresAt as number) * 1000) {
         return token

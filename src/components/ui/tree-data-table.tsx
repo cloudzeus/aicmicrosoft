@@ -25,12 +25,14 @@ export interface TreeNode {
 interface TreeDataTableProps {
   data: TreeNode[]
   onToggleExpand: (id: string) => void
-  onSelect: (id: string, selected: boolean) => void
-  onSelectAll: (selected: boolean) => void
+  onSelect?: (id: string, selected: boolean) => void
+  onSelectAll?: (selected: boolean) => void
+  onToggleSelect?: (id: string) => void
   onDragStart?: (id: string) => void
   onDragOver?: (id: string) => void
   onDrop?: (draggedId: string, targetId: string) => void
   onAction?: (action: string, id: string) => void
+  onRowAction?: (id: string, action: string) => void
   columns: {
     key: string
     label: string
@@ -41,7 +43,7 @@ interface TreeDataTableProps {
     label: string
     onClick: (id: string) => void
     icon?: React.ReactNode
-  }[]
+  }[] | string[]
 }
 
 export function TreeDataTable({
@@ -49,10 +51,12 @@ export function TreeDataTable({
   onToggleExpand,
   onSelect,
   onSelectAll,
+  onToggleSelect,
   onDragStart,
   onDragOver,
   onDrop,
   onAction,
+  onRowAction,
   columns,
   actions = []
 }: TreeDataTableProps) {
@@ -135,7 +139,13 @@ export function TreeDataTable({
           {/* Checkbox */}
           <Checkbox
             checked={isSelected}
-            onCheckedChange={(checked) => onSelect(node.id, !!checked)}
+            onCheckedChange={(checked) => {
+              if (onSelect) {
+                onSelect(node.id, !!checked)
+              } else if (onToggleSelect) {
+                onToggleSelect(node.id)
+              }
+            }}
             className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
           />
 
@@ -181,16 +191,27 @@ export function TreeDataTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {actions.map((action, index) => (
-                  <DropdownMenuItem
-                    key={index}
-                    onClick={() => action.onClick(node.id)}
-                    className="flex items-center gap-2"
-                  >
-                    {action.icon}
-                    {action.label}
-                  </DropdownMenuItem>
-                ))}
+                {actions.map((action, index) => {
+                  const actionLabel = typeof action === 'string' ? action : action.label
+                  const actionIcon = typeof action === 'string' ? null : action.icon
+                  
+                  return (
+                    <DropdownMenuItem
+                      key={index}
+                      onClick={() => {
+                        if (typeof action === 'string') {
+                          onRowAction?.(node.id, action)
+                        } else {
+                          action.onClick(node.id)
+                        }
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      {actionIcon}
+                      {actionLabel}
+                    </DropdownMenuItem>
+                  )
+                })}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -220,7 +241,7 @@ export function TreeDataTable({
             ref={(el) => {
               if (el) el.indeterminate = someSelected && !allSelected
             }}
-            onCheckedChange={(checked) => onSelectAll(!!checked)}
+            onCheckedChange={(checked) => onSelectAll?.(!!checked)}
             className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
           />
 
