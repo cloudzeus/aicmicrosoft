@@ -43,7 +43,7 @@ export default function SignInPage() {
             )}
             
             <Button
-              onClick={() => signIn("c03bef53-43af-4d5e-be22-da859317086c", { 
+              onClick={() => signIn("microsoft-entra-id", { 
                 callbackUrl: "/dashboard",
                 prompt: "consent" // Force consent screen to get new scopes
               })}

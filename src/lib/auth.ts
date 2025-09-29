@@ -5,6 +5,19 @@ import Microsoft from "next-auth/providers/microsoft-entra-id"
 import { prisma } from "./prisma"
 import { UserRole } from "@prisma/client"
 
+// Validate critical env vars early to surface configuration issues clearly
+const requiredEnvVars = [
+  "AUTH_MICROSOFT_ENTRA_ID_ID",
+  "AUTH_MICROSOFT_ENTRA_ID_SECRET",
+  "TENANT_ID",
+]
+
+for (const key of requiredEnvVars) {
+  if (!process.env[key] || String(process.env[key]).trim() === "") {
+    console.warn(`[auth] Missing required env var: ${key}. Provider may fail at runtime.`)
+  }
+}
+
 // Token refresh function
 async function refreshAccessToken(token: {
   accessToken?: string
