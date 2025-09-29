@@ -18,13 +18,21 @@ for (const key of requiredEnvVars) {
   }
 }
 
+console.log('[auth-stable] Runtime envs:', {
+  AUTH_URL: process.env.AUTH_URL,
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+  AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST,
+  NODE_ENV: process.env.NODE_ENV,
+})
+
 // STABLE AUTH CONFIGURATION - TESTED AND VERIFIED
 export const authConfig = {
   adapter: PrismaAdapter(prisma),
+  trustHost: process.env.AUTH_TRUST_HOST === 'true',
   providers: [
     Microsoft({
-      // Use the default provider id to match existing Account.provider records
-      id: "microsoft-entra-id",
+      // Use client ID as provider id to match existing Azure redirect URIs
+      id: "c03bef53-43af-4d5e-be22-da859317086c",
       clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID!,
       clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET!,
       issuer: `https://login.microsoftonline.com/${process.env.TENANT_ID}/v2.0`,
