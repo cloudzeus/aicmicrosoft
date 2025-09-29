@@ -10,7 +10,8 @@ export const authConfig = {
   adapter: PrismaAdapter(prisma),
   providers: [
     Microsoft({
-      id: "c03bef53-43af-4d5e-be22-da859317086c",
+      // Use the default provider id to match existing Account.provider records
+      id: "microsoft-entra-id",
       clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID!,
       clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET!,
       issuer: `https://login.microsoftonline.com/${process.env.TENANT_ID}/v2.0`,
