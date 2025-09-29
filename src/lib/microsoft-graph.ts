@@ -701,6 +701,8 @@ export class MicrosoftGraphAPI {
         throw new Error('No authenticated session found')
       }
 
+      console.log('Attempting to delete email with messageId:', messageId)
+
       // Get the user's Microsoft account to get the access token
       const user = await prisma.user.findUnique({
         where: { email: session.user.email! },
@@ -716,6 +718,8 @@ export class MicrosoftGraphAPI {
       // Get valid access token with automatic refresh
       const accessToken = await this.getValidAccessToken(user.id)
 
+      console.log('Making DELETE request to:', `${this.baseUrl}/me/messages/${messageId}`)
+
       const response = await fetch(`${this.baseUrl}/me/messages/${messageId}`, {
         method: 'DELETE',
         headers: {
@@ -724,10 +728,15 @@ export class MicrosoftGraphAPI {
         }
       })
 
+      console.log('Delete response status:', response.status, response.statusText)
+
       if (!response.ok) {
         const errorText = await response.text()
+        console.error('Delete error response:', errorText)
         throw new Error(`Failed to delete email: ${response.status} ${response.statusText} - ${errorText}`)
       }
+
+      console.log('Email deleted successfully')
     } catch (error) {
       console.error('Error deleting email:', error)
       throw error

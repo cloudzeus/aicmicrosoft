@@ -33,7 +33,13 @@ export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFol
   const [showComposeModal, setShowComposeModal] = useState(false)
   const [composeMode, setComposeMode] = useState<'reply' | 'replyAll' | 'forward' | 'compose'>('reply')
   const [users, setUsers] = useState<User[]>([])
+  const [localEmails, setLocalEmails] = useState<Email[]>(emails)
   const pathname = usePathname()
+
+  // Update local emails when props change
+  useEffect(() => {
+    setLocalEmails(emails)
+  }, [emails])
 
   // Fetch users for multiselect
   useEffect(() => {
@@ -56,11 +62,27 @@ export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFol
       const result = await deleteEmailAction(email.messageId, pathname)
       if (result.success) {
         console.log("Email deleted successfully")
+        // Immediately remove from local state
+        setLocalEmails(prev => prev.filter(e => e.messageId !== email.messageId))
+        // Close modal if this email was selected
+        if (selectedEmail?.messageId === email.messageId) {
+          setShowEmailModal(false)
+          setSelectedEmail(null)
+        }
       } else {
         alert(result.error)
       }
     } catch (error) {
       console.error('Failed to delete email:', error)
+      // If it's a 404 error, the email was already deleted, so remove it from local state
+      if (error instanceof Error && error.message.includes('404')) {
+        console.log('Email already deleted, removing from local state')
+        setLocalEmails(prev => prev.filter(e => e.messageId !== email.messageId))
+        if (selectedEmail?.messageId === email.messageId) {
+          setShowEmailModal(false)
+          setSelectedEmail(null)
+        }
+      }
     }
   }
 
@@ -174,7 +196,7 @@ export function EmailList({ emails, hasMore, nextLink, currentFolder, currentFol
       <Card className="border border-[#e5e7eb] shadow-sm overflow-auto">
         <CardContent className="p-0">
           <div>
-            {emails.map((email) => (
+            {localEmails.map((email) => (
               <ContextMenu key={`${email.id}-${email.receivedAt}`}>
                 <ContextMenuTrigger asChild>
                   <div
