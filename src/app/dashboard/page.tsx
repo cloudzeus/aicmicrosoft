@@ -9,7 +9,6 @@ import { FaUser, FaEnvelope, FaCalendarAlt, FaShieldAlt, FaBuilding, FaGlobe, Fa
 import { NewTeamsMeeting } from "@/components/calendar/new-teams-meeting"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview"
-import { TodosList } from "@/components/dashboard/todos-list"
 import { graphAPI } from "@/lib/microsoft-graph"
 
 export default async function DashboardPage() {
@@ -37,12 +36,10 @@ export default async function DashboardPage() {
   let myGroups: Array<{ id: string; displayName: string; mail?: string; mailEnabled?: boolean; groupTypes?: string[] }> = []
   let sharedMailboxes: Array<{ id: string; displayName: string; mail?: string }> = []
   let profileImageDataUrl: string | null = null
-  let microsoftTodos: any[] = []
   try {
     myGroups = await graphAPI.getMyGroups()
     sharedMailboxes = await graphAPI.getSharedMailboxesIAmMember()
     profileImageDataUrl = await graphAPI.getMyProfilePhotoBase64()
-    microsoftTodos = await graphAPI.getToDoTasks()
   } catch {
     // ignore errors to keep dashboard rendering
   }
@@ -58,8 +55,6 @@ export default async function DashboardPage() {
 
       {/* User Profile and Details */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Todos List */}
-        <TodosList userId={user.id} initialTodos={microsoftTodos} />
           {/* User Profile Card */}
           <Card className="border border-[#e5e7eb] shadow-sm">
             <CardHeader className="pb-3">
@@ -138,7 +133,7 @@ export default async function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-[12px] text-[#6b7280]">Token expires</span>
                   <span className="text-[13px] font-medium text-[#111827]">
-                    {new Date(microsoftAccount.expires_at * 1000).toLocaleString()}
+                    {new Date(Number(microsoftAccount.expires_at)).toLocaleString()}
                   </span>
                 </div>
               )}

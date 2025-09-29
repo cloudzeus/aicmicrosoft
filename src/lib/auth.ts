@@ -61,7 +61,7 @@ export const authConfig = {
       issuer: `https://login.microsoftonline.com/${process.env.TENANT_ID}/v2.0`,
       authorization: {
         params: {
-          scope: "openid profile email User.Read User.ReadBasic.All Calendars.Read Calendars.ReadWrite Mail.Read Mail.ReadWrite Mail.Send",
+          scope: "openid profile email offline_access User.Read User.ReadBasic.All Calendars.Read Calendars.ReadWrite Mail.Read Mail.ReadWrite Mail.Send",
         },
       },
     }),
@@ -75,25 +75,7 @@ export const authConfig = {
         hasProfile: !!profile
       })
       
-      if (account?.provider === "c03bef53-43af-4d5e-be22-da859317086c") {
-        try {
-          // Check if user exists in database and preserve their role
-          const existingUser = await prisma.user.findUnique({
-            where: { email: user.email! },
-            select: { role: true }
-          })
-          
-          console.log('Existing user found:', existingUser)
-          
-          // If user exists with ADMIN role, preserve it
-          if (existingUser?.role === 'ADMIN') {
-            console.log(`Preserving ADMIN role for ${user.email}`)
-            return true
-          }
-        } catch (error) {
-          console.error('Error in signIn callback:', error)
-        }
-      }
+      // Temporarily simplified to avoid account linking issues
       return true
     },
     async jwt({ token, account, user, trigger }) {

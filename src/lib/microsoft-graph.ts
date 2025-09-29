@@ -143,7 +143,7 @@ export class MicrosoftGraphAPI {
   }
 
   // Helper method to get access token from session user
-  private async getAccessTokenFromSession(): Promise<string> {
+  async getAccessTokenFromSession(): Promise<string> {
     const session = await auth()
     if (!session?.user) {
       throw new Error('No authenticated session found')
@@ -174,11 +174,13 @@ export class MicrosoftGraphAPI {
     
     // Check if token is expired (with 5 minute buffer)
     const now = Math.floor(Date.now() / 1000)
-    const expiresAt = microsoftAccount.expires_at ? Math.floor(microsoftAccount.expires_at / 1000) : 0
+    const expiresAt = microsoftAccount.expires_at ? Math.floor(Number(microsoftAccount.expires_at) / 1000) : 0
     
     if (expiresAt - now < 300) { // 5 minutes buffer
       if (!microsoftAccount.refresh_token) {
-        throw new Error('No refresh token available')
+        console.warn('No refresh token available - Microsoft Graph features will be limited. Please re-authenticate.')
+        // Return null instead of throwing to allow graceful degradation
+        return null
       }
       
       try {
@@ -189,7 +191,7 @@ export class MicrosoftGraphAPI {
           where: { id: microsoftAccount.id },
           data: {
             access_token: refreshedTokens.accessToken,
-            expires_at: Date.now() + refreshedTokens.expiresIn * 1000
+            expires_at: BigInt(Date.now() + refreshedTokens.expiresIn * 1000)
           }
         })
         
@@ -256,17 +258,13 @@ export class MicrosoftGraphAPI {
 
   async getSharePointSites(): Promise<SharePointSite[]> {
     try {
-      const session = await auth()
-      
-      if (!session?.user || !session.accessToken) {
-        throw new Error('No authenticated session or access token found')
-      }
+      const accessToken = await this.getAccessTokenFromSession()
 
-      console.log('Fetching SharePoint sites with access token:', session.accessToken.substring(0, 20) + '...')
+      console.log('Fetching SharePoint sites with access token:', accessToken.substring(0, 20) + '...')
 
       const response = await fetch(`${this.baseUrl}/sites?search=*`, {
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       })
@@ -376,14 +374,11 @@ export class MicrosoftGraphAPI {
   }
 
   async getMyGroups(): Promise<Array<{ id: string; displayName: string; mail?: string; mailEnabled?: boolean; groupTypes?: string[]; securityEnabled?: boolean; description?: string }>> {
-    const session = await auth()
-    if (!session?.user || !session.accessToken) {
-      throw new Error('No authenticated session or access token found')
-    }
+    const accessToken = await this.getAccessTokenFromSession()
 
     const res = await fetch(`${this.baseUrl}/me/memberOf?$select=id,displayName,mail,mailEnabled,groupTypes`, {
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     })
@@ -547,19 +542,18 @@ export class MicrosoftGraphAPI {
 
   async getCalendarEvents(): Promise<GraphEvent[]> {
     try {
-      // Get the session to extract access token
-      const session = await auth()
+      const accessToken = await this.getAccessTokenFromSession()
       
-      if (!session?.user || !session.accessToken) {
-        throw new Error('No authenticated session or access token found')
+      if (!accessToken) {
+        throw new Error('No access token available')
       }
 
-      console.log('Making Graph API call with access token:', session.accessToken.substring(0, 20) + '...')
+      console.log('Making Graph API call with access token:', accessToken.substring(0, 20) + '...')
 
       // Make the actual Microsoft Graph API call
       const response = await fetch(`${this.baseUrl}/me/events`, {
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       })
@@ -822,6 +816,11 @@ export class MicrosoftGraphAPI {
 
   async getAllMailFolders(): Promise<GraphMailFolder[]> {
     const accessToken = await this.getAccessTokenFromSession()
+    
+    if (!accessToken) {
+      console.warn('No access token available for getAllMailFolders')
+      return []
+    }
 
     const headers = {
       'Authorization': `Bearer ${accessToken}`,
@@ -856,6 +855,11 @@ export class MicrosoftGraphAPI {
     folderId?: string
   ): Promise<{ value: GraphEmail[]; nextLink?: string }> {
     const accessToken = await this.getAccessTokenFromSession()
+    
+    if (!accessToken) {
+      console.warn('No access token available for getMessages')
+      return { value: [], nextLink: undefined }
+    }
 
     let url: string
     if (nextLink) {
@@ -1058,101 +1062,6 @@ export class MicrosoftGraphAPI {
     ]
   }
 
-  // Microsoft To Do methods
-  async getToDoLists(): Promise<any[]> {
-    const accessToken = await this.getAccessTokenFromSession()
-    const res = await fetch(`${this.baseUrl}/me/todo/lists`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      }
-    })
-    if (!res.ok) {
-      const t = await res.text()
-      console.error('Graph getToDoLists failed:', t)
-      throw new Error(`Failed to get To Do lists: ${t}`)
-    }
-    const data = await res.json()
-    return data.value || []
-  }
-
-  async getToDoTasks(listId: string = 'default', filter: string = ''): Promise<any[]> {
-    try {
-      const accessToken = await this.getAccessTokenFromSession()
-      let url = `${this.baseUrl}/me/todo/lists/${listId}/tasks`
-      if (filter) {
-        url += `?$filter=${encodeURIComponent(filter)}`
-      }
-      
-      const res = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        }
-      })
-      if (!res.ok) {
-        const t = await res.text()
-        console.error('Graph getToDoTasks failed:', t)
-        throw new Error(`Failed to get To Do tasks: ${t}`)
-      }
-      const data = await res.json()
-      return data.value || []
-    } catch (error) {
-      console.error('Error fetching To Do tasks:', error)
-      // Return empty array instead of throwing to prevent dashboard from breaking
-      return []
-    }
-  }
-
-  async getToDoTask(listId: string, taskId: string): Promise<any> {
-    const accessToken = await this.getAccessTokenFromSession()
-    const res = await fetch(`${this.baseUrl}/me/todo/lists/${listId}/tasks/${taskId}`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      }
-    })
-    if (!res.ok) {
-      const t = await res.text()
-      console.error('Graph getToDoTask failed:', t)
-      throw new Error(`Failed to get To Do task: ${t}`)
-    }
-    return await res.json()
-  }
-
-  async updateToDoTask(listId: string, taskId: string, updateData: any): Promise<any> {
-    const accessToken = await this.getAccessTokenFromSession()
-    const res = await fetch(`${this.baseUrl}/me/todo/lists/${listId}/tasks/${taskId}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updateData)
-    })
-    if (!res.ok) {
-      const t = await res.text()
-      console.error('Graph updateToDoTask failed:', t)
-      throw new Error(`Failed to update To Do task: ${t}`)
-    }
-    return await res.json()
-  }
-
-  async deleteToDoTask(listId: string, taskId: string): Promise<void> {
-    const accessToken = await this.getAccessTokenFromSession()
-    const res = await fetch(`${this.baseUrl}/me/todo/lists/${listId}/tasks/${taskId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      }
-    })
-    if (!res.ok) {
-      const t = await res.text()
-      console.error('Graph deleteToDoTask failed:', t)
-      throw new Error(`Failed to delete To Do task: ${t}`)
-    }
-  }
 }
 
 export const graphAPI = new MicrosoftGraphAPI()

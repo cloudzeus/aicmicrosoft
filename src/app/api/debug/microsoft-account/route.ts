@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         scope: microsoftAccount.scope,
         expiresAt: microsoftAccount.expires_at,
         isExpired: microsoftAccount.expires_at ? 
-          new Date(microsoftAccount.expires_at * 1000) < new Date() : 
+          new Date(Number(microsoftAccount.expires_at)) < new Date() : 
           true
       } : null,
       allAccounts: user.accounts.map(acc => ({

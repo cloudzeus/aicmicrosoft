@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth()
 
-    if (!session?.user || !session.accessToken) {
+    if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -64,19 +64,6 @@ export async function GET(request: NextRequest) {
 
     console.log("Fetching calendar events for user:", session.user.email)
 
-    // Get access token from JWT session
-    const accessToken = session.accessToken
-    
-    if (!accessToken) {
-      console.log("No access token found in session, using fallback")
-      const events = await graphAPI.getCalendarEventsWithFallback()
-      return NextResponse.json({
-        events: events,
-        user: session.user,
-        message: "Calendar events fetched successfully (mock data - no access token available)"
-      })
-    }
-
     // Try to get real calendar events from Microsoft Graph API
     const events = await graphAPI.getCalendarEvents()
 
@@ -113,10 +100,12 @@ export async function POST(request: NextRequest) {
     const eventData = await request.json()
     console.log("Creating new event:", eventData)
 
-    // Use current session access token (fresh) for Microsoft Graph
-    if (!session.accessToken) {
+    // Get access token from database
+    const accessToken = await graphAPI.getAccessTokenFromSession()
+    
+    if (!accessToken) {
       return NextResponse.json(
-        { error: "No access token available in session" },
+        { error: "No access token available" },
         { status: 401 }
       )
     }
@@ -166,7 +155,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch('https://graph.microsoft.com/v1.0/me/events', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(graphEvent)
