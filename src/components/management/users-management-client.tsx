@@ -14,6 +14,9 @@ interface User {
   id: string
   name: string | null
   email: string
+  phone?: string | null
+  mobile?: string | null
+  extension?: string | null
   jobTitle?: string | null
   department?: string | null
   officeLocation?: string | null

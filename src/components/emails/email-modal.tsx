@@ -38,29 +38,27 @@ export function EmailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[1400px] w-full rounded-lg bg-white p-8 dark:bg-gray-950 max-h-[80vh] overflow-auto mx-4 sm:mx-6 md:mx-8 lg:mx-10">
+      <DialogContent className="!max-w-[1400px] w-full rounded-lg bg-white p-8 dark:bg-gray-950 max-h-[80vh] overflow-auto mx-4 sm:mx-6 md:mx-8 lg:mx-10">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-3">
             <Mail className="h-6 w-6 text-green-600" />
             {email.subject}
           </DialogTitle>
-          <DialogDescription className="text-gray-500 dark:text-gray-400 flex items-center gap-4">
-            <span>From: {email.sender}</span>
-            <span>To: {email.recipient}</span>
-            <span>Date: {formatDate(email.receivedAt)}</span>
-            <div className="flex items-center gap-2">
-              {email.isImportant && (
-                <Badge variant="destructive" className="text-xs">
-                  High Priority
-                </Badge>
-              )}
-              {!email.isRead && (
-                <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700">
-                  Unread
-                </Badge>
-              )}
-            </div>
+          <DialogDescription className="text-gray-500 dark:text-gray-400">
+            From: {email.sender} • To: {email.recipient} • Date: {formatDate(email.receivedAt)}
           </DialogDescription>
+          <div className="flex items-center gap-2 mt-2">
+            {email.isImportant && (
+              <Badge variant="destructive" className="text-xs">
+                High Priority
+              </Badge>
+            )}
+            {!email.isRead && (
+              <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700">
+                Unread
+              </Badge>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="grid gap-6 py-6">
@@ -87,27 +85,11 @@ export function EmailModal({
             <h3 className="text-lg font-medium mb-4">Email Content</h3>
             {email.htmlBody ? (
               <div 
-                className="prose prose-sm max-w-none text-sm text-gray-900 dark:text-gray-100 leading-relaxed
-                  [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_img]:shadow-sm [&_img]:my-4 [&_img]:block
-                  [&_p]:text-sm [&_p]:mb-3 [&_p]:leading-relaxed
-                  [&_div]:text-sm [&_div]:leading-relaxed
-                  [&_span]:text-sm [&_span]:leading-relaxed
-                  [&_a]:text-blue-600 [&_a]:underline [&_a]:text-sm dark:[&_a]:text-blue-400
-                  [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:mb-3 [&_h1]:mt-4
-                  [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-4
-                  [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mb-2 [&_h3]:mt-3
-                  [&_h4]:text-sm [&_h4]:font-semibold [&_h4]:mb-2 [&_h4]:mt-3
-                  [&_h5]:text-sm [&_h5]:font-semibold [&_h5]:mb-2 [&_h5]:mt-3
-                  [&_h6]:text-sm [&_h6]:font-semibold [&_h6]:mb-2 [&_h6]:mt-3
-                  [&_ul]:text-sm [&_ul]:mb-3 [&_ul]:pl-4
-                  [&_ol]:text-sm [&_ol]:mb-3 [&_ol]:pl-4
-                  [&_li]:text-sm [&_li]:mb-1 [&_li]:leading-relaxed
-                  [&_table]:text-sm [&_table]:border-collapse [&_table]:w-full [&_table]:mb-4
-                  [&_td]:text-sm [&_td]:border [&_td]:border-gray-300 [&_td]:p-2 [&_td]:align-top dark:[&_td]:border-gray-600
-                  [&_th]:text-sm [&_th]:border [&_th]:border-gray-300 [&_th]:p-2 [&_th]:bg-gray-50 [&_th]:font-semibold [&_th]:text-left dark:[&_th]:bg-gray-700 dark:[&_th]:border-gray-600
-                  [&_blockquote]:text-sm [&_blockquote]:border-l-2 [&_blockquote]:border-gray-300 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-3 dark:[&_blockquote]:border-gray-600
-                  [&_code]:text-sm [&_code]:bg-gray-200 [&_code]:px-2 [&_code]:py-1 [&_code]:rounded dark:[&_code]:bg-gray-700
-                  [&_pre]:text-sm [&_pre]:bg-gray-200 [&_pre]:p-3 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:my-3 dark:[&_pre]:bg-gray-700"
+                className="text-sm text-gray-900 dark:text-gray-100 leading-relaxed space-y-3"
+                style={{
+                  lineHeight: '1.6',
+                  fontSize: '14px'
+                }}
                 dangerouslySetInnerHTML={{ __html: email.htmlBody }}
               />
             ) : email.body ? (

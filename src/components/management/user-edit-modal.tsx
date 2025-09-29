@@ -13,6 +13,9 @@ interface User {
   id: string
   name: string | null
   email: string
+  phone?: string | null
+  mobile?: string | null
+  extension?: string | null
   jobTitle?: string | null
   department?: string | null
   officeLocation?: string | null
@@ -37,6 +40,9 @@ export function UserEditModal({
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
+    mobile: "",
+    extension: "",
     jobTitle: "",
     officeLocation: "",
     role: "USER"
@@ -48,6 +54,9 @@ export function UserEditModal({
       setFormData({
         name: user.name || "",
         email: user.email,
+        phone: user.phone || "",
+        mobile: user.mobile || "",
+        extension: user.extension || "",
         jobTitle: user.jobTitle || "",
         officeLocation: user.officeLocation || "",
         role: user.role
@@ -162,6 +171,41 @@ export function UserEditModal({
                 Email cannot be changed for Office 365 synced users
               </p>
             )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="e.g., +1 (555) 123-4567"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mobile">Mobile</Label>
+              <Input
+                id="mobile"
+                value={formData.mobile}
+                onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                placeholder="e.g., +1 (555) 987-6543"
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="extension">Extension</Label>
+            <Input
+              id="extension"
+              value={formData.extension}
+              onChange={(e) => setFormData({ ...formData, extension: e.target.value })}
+              placeholder="e.g., 1234"
+              disabled={isLoading}
+            />
           </div>
 
           <div className="space-y-2">
